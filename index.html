@@ -1892,10 +1892,24 @@ function handleClick(word,el){
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
     playerScore=Math.max(0,playerScore-1);
     document.getElementById('hud-pscore').textContent=playerScore+'점';
-    const ob=el.style.borderColor, os=el.style.boxShadow;
-    el.style.borderColor='rgba(255,50,50,.95)';
-    el.style.boxShadow='0 0 22px rgba(255,50,50,.7),inset 0 0 12px rgba(255,0,0,.3)';
-    setTimeout(()=>{el.style.borderColor=ob;el.style.boxShadow=os;},420);
+    // 붉은 깜박임 3회
+    const ob=el.style.borderColor, os=el.style.boxShadow, obg=el.style.background;
+    el.style.pointerEvents='none';
+    let fc=0;
+    const fi=setInterval(()=>{
+      fc++;
+      const on=fc%2===1;
+      el.style.background=on?'rgba(220,30,30,.88)':obg;
+      el.style.borderColor=on?'rgba(255,80,80,.95)':ob;
+      el.style.boxShadow=on?'0 0 30px rgba(255,0,0,.9),inset 0 0 18px rgba(200,0,0,.6)':os;
+      if(fc>=6){
+        clearInterval(fi);
+        el.style.background=obg;
+        el.style.borderColor=ob;
+        el.style.boxShadow=os;
+        el.style.pointerEvents='all';
+      }
+    },100);
   }
 }
 function endGame(completed){
