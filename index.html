@@ -148,7 +148,7 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 /* ── 비눗방울 떨어지는 단어 ── */
 .fw{position:absolute;display:flex;align-items:center;justify-content:center;
   cursor:pointer;pointer-events:all;animation:fallDown linear forwards;white-space:nowrap;
-  font-size:clamp(2rem,4.8vw,3.4rem);font-weight:800;color:#fff;
+  font-size:clamp(1.4rem,3.2vw,2.4rem);font-weight:800;color:#fff;
   text-shadow:0 1px 6px rgba(0,0,40,.75);
   border-radius:50%;min-width:130px;min-height:130px;padding:0 30px;
   border:2.5px solid rgba(255,255,255,.72);
@@ -1795,7 +1795,7 @@ function getDistractors(n){
   const fresh=shuffle(pool.filter(w=>!onScreen.has(w)));
   return (fresh.length>=n?fresh:shuffle(pool)).slice(0,n);
 }
-const MIN_BUBBLES=8;
+const MIN_BUBBLES=7;
 function countActive(){return document.getElementById('game-field').querySelectorAll('.fw:not(.popping)').length;}
 function fillToBmin(){
   const need=MIN_BUBBLES-countActive();
@@ -1890,6 +1890,8 @@ function handleClick(word,el){
     comboCount=0;
     wrongClickCount++;
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
+    playerScore=Math.max(0,playerScore-1);
+    document.getElementById('hud-pscore').textContent=playerScore+'점';
     const ob=el.style.borderColor, os=el.style.boxShadow;
     el.style.borderColor='rgba(255,50,50,.95)';
     el.style.boxShadow='0 0 22px rgba(255,50,50,.7),inset 0 0 12px rgba(255,0,0,.3)';
