@@ -175,10 +175,14 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 }
 .fw.fw-wrong{pointer-events:none!important;}
 .fw.fw-wrong::after{
-  content:'';position:absolute;inset:0;border-radius:20px;
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;border-radius:50%;
   background:rgba(220,20,20,.85);
   animation:wrongFlash .64s ease forwards;
   pointer-events:none;z-index:5;}
+@keyframes wrongFlashScreen{
+  0%{background:rgba(220,20,20,.38);}
+  100%{background:rgba(220,20,20,0);}
+}
 .pop-txt{position:fixed;pointer-events:none;z-index:300;font-size:2.2rem;font-weight:800;color:#ffd93d;text-shadow:0 0 18px #ff6b6b;transform:translate(-50%,-50%);animation:popout .55s ease-out forwards;}
 @keyframes popout{0%{transform:translate(-50%,-50%) scale(.5);opacity:1;}55%{transform:translate(-50%,-60%) scale(2);opacity:1;}100%{transform:translate(-50%,-100%) scale(2.5);opacity:0;}}
 .particle{position:fixed;width:11px;height:11px;border-radius:50%;pointer-events:none;z-index:300;}
@@ -1904,7 +1908,21 @@ function handleClick(word,el){
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
     playerScore=Math.max(0,playerScore-1);
     document.getElementById('hud-pscore').textContent=playerScore+'점';
-    // 오답 붉은 깜박임 (CSS ::after 오버레이)
+    // ① 화면 전체 빨간 플래시
+    const f=document.getElementById('flash-overlay');
+    f.style.display='block';f.style.animation='none';f.offsetHeight;
+    f.style.background='rgba(220,20,20,.38)';
+    f.style.animation='wrongFlashScreen .35s ease-out forwards';
+    setTimeout(()=>f.style.display='none',400);
+    // ② 클릭 위치에 -1 팝업
+    const r=el.getBoundingClientRect();
+    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const p=document.createElement('div');
+    p.className='pop-txt';
+    p.style.color='#ff4444';p.style.textShadow='0 0 18px #ff0000';
+    p.textContent='-1';p.style.left=cx+'px';p.style.top=cy+'px';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),600);
+    // ③ 버블 빨간 깜박임
     el.classList.add('fw-wrong');
     setTimeout(()=>el.classList.remove('fw-wrong'),700);
   }
