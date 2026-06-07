@@ -327,7 +327,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       <div class="warn-text">※ 관리자로부터 받은 코드를 입력하면 학교명과 설정이 자동 복구됩니다.</div>
       <button class="btn btn-primary gesture-btn" onclick="applySchoolCode()">코드 적용 →</button>
     </div>
-    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')" style="margin-top:12px;">← 뒤로</button>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">← 뒤로</button>
+      <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
+    </div>
   </div>
 </div>
 
@@ -358,7 +361,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <button class="btn btn-ghost btn-sm gesture-btn" onclick="scBack(3)">← 뒤로</button>
   </div>
 
-  <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('login')" style="margin-top:4px;">← 학교 변경</button>
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('login')">← 학교 변경</button>
+    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
+  </div>
 </div>
 
 <!-- ══ INTRO ══ -->
@@ -372,7 +378,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
     <button class="btn btn-primary gesture-btn" onclick="goNameScreen()">🎯 게임 시작!</button>
     <button class="btn btn-ghost btn-sm gesture-btn" id="analyze-btn" style="display:none;" onclick="openAnalysis()">📊 결과 분석</button>
-    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🔄 모드 변경</button>
+    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
   </div>
 </div>
 
@@ -381,9 +387,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <div class="name-prompt">게임 참여자 이름을 말해주세요! 🎤</div>
   <div class="mic-wrap" id="mic-icon">🎤</div>
   <div id="rec-name">듣는 중...</div>
-  <div style="display:flex;gap:14px;">
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
     <button class="btn btn-ghost gesture-btn" onclick="restartVoice()">🔄 다시 말하기</button>
     <button class="btn btn-primary gesture-btn" id="confirm-btn" style="display:none;" onclick="confirmName()">확인 ✓</button>
+    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
   </div>
 </div>
 
@@ -405,7 +412,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <button class="spd-btn gesture-btn" id="spd-2" onclick="selectSpeed(2)">🐇 보통</button>
     <button class="spd-btn gesture-btn" id="spd-3" onclick="selectSpeed(3)">🚀 빠름</button>
   </div>
-  <button class="btn btn-primary gesture-btn" id="start-btn" style="display:none;" onclick="beginCountdown()">게임 시작! 🚀</button>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-primary gesture-btn" id="start-btn" style="display:none;" onclick="beginCountdown()">게임 시작! 🚀</button>
+    <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
+  </div>
 </div>
 
 <!-- ══ COUNTDOWN ══ -->
@@ -437,6 +447,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <button class="opt-btn opt-a gesture-btn" onclick="optContinue()">✅ 가. 이어서 하기</button>
     <button class="opt-btn opt-b gesture-btn" onclick="optNewPlayer()">👤 나. 새로운 게임자 참여</button>
     <button class="opt-btn opt-c gesture-btn" onclick="optQuit()">🚪 다. 게임 종료</button>
+    <button class="opt-btn gesture-btn" style="background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3);" onclick="show('mode')">🏠 홈으로</button>
   </div>
 </div>
 
@@ -451,6 +462,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-ghost btn-sm gesture-btn" id="an-sync-btn" style="display:none;" onclick="syncAndRefreshAnalysis()">🔄 동기화</button>
       <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeAnalysis()">← 뒤로</button>
+      <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
     </div>
   </div>
 
@@ -973,9 +985,9 @@ function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
   document.getElementById('screen-'+id).style.display=SCREEN_DISP[id]||'flex';
   curScreen=id;
-  const GAME_SCREENS=new Set(['name','stage','countdown','game','end']);
+  const HIDE_SETTINGS=new Set(['mode','name','stage','countdown','game','end']);
   const wrap=document.getElementById('settingsWrap');
-  wrap.style.display=(GAME_SCREENS.has(id)||isParticipant)?'none':'flex';
+  wrap.style.display=(HIDE_SETTINGS.has(id)||isParticipant)?'none':'flex';
   const badge=document.getElementById('modeBadgeSm');
   if(appMode==='online'){badge.textContent='온';badge.style.color='#4cde80';}
   else{badge.textContent='오';badge.style.color='#aaa';}
