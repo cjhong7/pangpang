@@ -1151,6 +1151,7 @@ function chooseOffline(){
   enterIntro();
 }
 function chooseOnline(){
+  appMode='online';
   _rememberSchool = localStorage.getItem('hpg_remember_school') !== '0';
   document.getElementById('remember-school').checked = _rememberSchool;
   document.getElementById('login-school').value = _rememberSchool ? (school||'') : '';
