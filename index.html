@@ -377,7 +377,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   </div>
   <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
     <button class="btn btn-primary gesture-btn" onclick="goNameScreen()">🎯 게임 시작!</button>
-    <button class="btn btn-ghost btn-sm gesture-btn" id="analyze-btn" style="display:none;" onclick="openAnalysis()">📊 결과 분석</button>
     <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
   </div>
 </div>
@@ -1327,9 +1326,6 @@ function enterIntro(){
   updateModeBadge();
   renderLB();
   if(driveActive()) refreshCloudLB();
-  // 분석 버튼: 온라인 + 관리자 잠금 해제 + 데이터 있을 때만 표시
-  const ab=document.getElementById('analyze-btn');
-  if(ab) ab.style.display=(appMode==='online'&&settingsUnlocked&&getLB().length>0)?'inline-flex':'none';
   show('intro');
 }
 function updateModeBadge(){
