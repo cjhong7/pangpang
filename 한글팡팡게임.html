@@ -288,6 +288,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <video id="video" autoplay playsinline muted></video>
 <div class="cam-tint"></div>
 <div id="flash-overlay"></div>
+<div id="wrong-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(210,10,10,0.55);z-index:9990;pointer-events:none;"></div>
 <div id="combo-disp"></div>
 <div id="settingsWrap">
   <span id="modeBadgeSm"></span>
@@ -1910,23 +1911,19 @@ function handleClick(word,el){
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
     playerScore=Math.max(0,playerScore-1);
     document.getElementById('hud-pscore').textContent=playerScore+'점';
-    // ① 화면 전체 빨간 플래시
-    const f=document.getElementById('flash-overlay');
-    f.style.display='block';f.style.animation='none';f.offsetHeight;
-    f.style.background='rgba(220,20,20,.38)';
-    f.style.animation='wrongFlashScreen .35s ease-out forwards';
-    setTimeout(()=>f.style.display='none',400);
-    // ② 클릭 위치에 -1 팝업
-    const r=el.getBoundingClientRect();
-    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    // ① 화면 전체 빨간 오버레이 (CSS animation 없이 순수 display 토글)
+    const wo=document.getElementById('wrong-overlay');
+    wo.style.display='block';
+    setTimeout(()=>wo.style.display='none',480);
+    // ② 화면 중앙에 큰 -1 텍스트 (z-index:9999, CSS animation 없음)
     const p=document.createElement('div');
-    p.className='pop-txt';
-    p.style.color='#ff4444';p.style.textShadow='0 0 18px #ff0000';
-    p.textContent='-1';p.style.left=cx+'px';p.style.top=cy+'px';
-    document.body.appendChild(p);setTimeout(()=>p.remove(),600);
-    // ③ 버블 빨간 깜박임
-    el.classList.add('fw-wrong');
-    setTimeout(()=>el.classList.remove('fw-wrong'),700);
+    p.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-size:5rem;font-weight:900;color:#ff2020;text-shadow:0 0 24px #ff0000,0 3px 8px #000;pointer-events:none;';
+    p.textContent='-1';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),550);
+    // ③ 버블 배경 직접 빨간색으로 (::after 없이 inline style)
+    const origBg=el.style.background;const origBdr=el.style.borderColor;
+    el.style.background='rgba(210,10,10,0.9)';el.style.borderColor='rgba(255,80,80,0.9)';
+    setTimeout(()=>{el.style.background=origBg;el.style.borderColor=origBdr;},550);
   }
 }
 function endGame(completed){
