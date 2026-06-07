@@ -414,22 +414,47 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <div style="color:#fff;font-size:clamp(1.1rem,2.8vw,1.7rem);font-weight:800;">
     <span id="pname-disp" style="color:#ffd93d;"></span>님, 단계를 선택하세요! 👇
   </div>
-  <div class="stage-grid">
-    <div class="s-btn gesture-btn" id="stage-btn-1" onclick="selectStage(1)"><div class="sn">1단계</div><div class="sd">한 글자</div><div class="sp">+2점</div></div>
-    <div class="s-btn gesture-btn" id="stage-btn-2" onclick="selectStage(2)"><div class="sn">2단계</div><div class="sd">두 글자</div><div class="sp">+4점</div></div>
-    <div class="s-btn gesture-btn" id="stage-btn-3" onclick="selectStage(3)"><div class="sn">3단계</div><div class="sd">세 글자</div><div class="sp">+6점</div></div>
-    <div class="s-btn gesture-btn" id="stage-btn-4" onclick="selectStage(4)"><div class="sn">4단계</div><div class="sd">네 글자</div><div class="sp">+8점</div></div>
-    <div class="s-btn gesture-btn" id="stage-btn-5" onclick="selectStage(5)" style="grid-column:span 2;background:rgba(255,107,107,.2);"><div class="sn">5단계 ⭐</div><div class="sd">1~4단계 무작위 종합</div><div class="sp">+10점</div></div>
+
+  <!-- 3열 레이아웃: [게임시작 열] [단계 그리드] [홈 열] -->
+  <div style="display:flex;gap:12px;width:94%;max-width:660px;align-items:flex-start;">
+
+    <!-- 왼쪽: 1행 자리표시(ghost) + 게임시작 버튼 -->
+    <div style="display:flex;flex-direction:column;gap:18px;flex-shrink:0;">
+      <!-- ghost: 1단계 높이만큼 공간 확보 → 게임시작이 3단계 높이에 위치 -->
+      <div class="s-btn" style="visibility:hidden;pointer-events:none;min-width:82px;" aria-hidden="true">
+        <div class="sn">X</div><div class="sd">X</div><div class="sp">X</div>
+      </div>
+      <button class="btn btn-primary gesture-btn" id="start-btn"
+        style="opacity:.3;pointer-events:none;padding:14px 10px;font-size:1rem;line-height:1.4;"
+        onclick="beginCountdown()">게임<br>시작!<br>🚀</button>
+    </div>
+
+    <!-- 중앙: 1~5단계 그리드 (크기·배치 그대로) -->
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="s-btn gesture-btn" id="stage-btn-1" onclick="selectStage(1)"><div class="sn">1단계</div><div class="sd">한 글자</div><div class="sp">+2점</div></div>
+      <div class="s-btn gesture-btn" id="stage-btn-2" onclick="selectStage(2)"><div class="sn">2단계</div><div class="sd">두 글자</div><div class="sp">+4점</div></div>
+      <div class="s-btn gesture-btn" id="stage-btn-3" onclick="selectStage(3)"><div class="sn">3단계</div><div class="sd">세 글자</div><div class="sp">+6점</div></div>
+      <div class="s-btn gesture-btn" id="stage-btn-4" onclick="selectStage(4)"><div class="sn">4단계</div><div class="sd">네 글자</div><div class="sp">+8점</div></div>
+      <div class="s-btn gesture-btn" id="stage-btn-5" onclick="selectStage(5)" style="grid-column:span 2;background:rgba(255,107,107,.2);"><div class="sn">5단계 ⭐</div><div class="sd">1~4단계 무작위 종합</div><div class="sp">+10점</div></div>
+    </div>
+
+    <!-- 오른쪽: 1행 ghost + 홈 버튼 -->
+    <div style="display:flex;flex-direction:column;gap:18px;flex-shrink:0;">
+      <div class="s-btn" style="visibility:hidden;pointer-events:none;min-width:58px;" aria-hidden="true">
+        <div class="sn">X</div><div class="sd">X</div><div class="sp">X</div>
+      </div>
+      <button class="btn btn-ghost btn-sm gesture-btn"
+        style="padding:14px 8px;font-size:.95rem;line-height:1.6;"
+        onclick="show('mode')">🏠<br>홈</button>
+    </div>
+
   </div>
+
   <div class="speed-row">
     <label>속도 선택:</label>
     <button class="spd-btn sel gesture-btn" id="spd-1" onclick="selectSpeed(1)">🐢 느림</button>
     <button class="spd-btn gesture-btn" id="spd-2" onclick="selectSpeed(2)">🐇 보통</button>
     <button class="spd-btn gesture-btn" id="spd-3" onclick="selectSpeed(3)">🚀 빠름</button>
-  </div>
-  <div style="display:flex;align-items:center;width:90%;max-width:600px;">
-    <button class="btn btn-primary gesture-btn" id="start-btn" style="display:none;" onclick="beginCountdown()">게임 시작! 🚀</button>
-    <button class="btn btn-ghost btn-sm gesture-btn" style="margin-left:auto;" onclick="show('mode')">🏠 홈</button>
   </div>
 </div>
 
@@ -1704,7 +1729,8 @@ function confirmName(){
   if(!playerName)return;
   document.getElementById('pname-disp').textContent=playerName;
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('start-btn').style.display='none';
+  const sb=document.getElementById('start-btn');
+  sb.style.opacity='0.3'; sb.style.pointerEvents='none';
   stage=0;
   show('stage');
 }
@@ -1716,7 +1742,8 @@ function selectStage(n){
   stage=n;
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('stage-btn-'+n).classList.add('sel');
-  document.getElementById('start-btn').style.display='inline-block';
+  const sb=document.getElementById('start-btn');
+  sb.style.opacity='1'; sb.style.pointerEvents='auto';
 }
 function selectSpeed(n){
   speed=n;
@@ -1920,7 +1947,8 @@ function optContinue(){
 function optNewPlayer(){
   playerName='';playerScore=0;comboCount=0;stage=0;
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('start-btn').style.display='none';
+  const sb2=document.getElementById('start-btn');
+  sb2.style.opacity='0.3'; sb2.style.pointerEvents='none';
   show('name');startVoice();
 }
 function optQuit(){
