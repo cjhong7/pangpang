@@ -671,7 +671,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',1,0)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',1,0,'g1')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',1,0,'g1-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',1,0,'g1-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="g1-code-area" style="display:none;margin-top:8px;">
           <div class="set-row">
@@ -688,7 +688,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',2,0)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',2,0,'g2')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',2,0,'g2-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',2,0,'g2-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="g2-code-area" style="display:none;margin-top:8px;">
           <div class="set-row">
@@ -705,7 +705,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',3,0)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',3,0,'g3')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',3,0,'g3-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',3,0,'g3-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="g3-code-area" style="display:none;margin-top:8px;">
           <div class="set-row">
@@ -737,7 +737,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(1)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(1)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(1)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(1)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="cls1-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls1-code-lbl"></div>
@@ -767,7 +767,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(2)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(2)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(2)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(2)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="cls2-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls2-code-lbl"></div>
@@ -797,7 +797,7 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(3)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(3)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(3)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(3)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
         </div>
         <div id="cls3-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls3-code-lbl"></div>
@@ -1062,7 +1062,7 @@ function updateCursors(tips){
 }
 function hideCursors(){const c=document.getElementById('hand-cursors');if(c)[...c.children].forEach(d=>d.style.display='none');}
 
-const MENU_SCREENS=new Set(['mode','login','scope','intro','name','stage','end','analysis','settings']);
+const MENU_SCREENS=new Set(['mode','login','scope','intro','name','stage','end','analysis']);
 function onHandResults(res){
   lastHandFrame=Date.now();
   const tips=[];
