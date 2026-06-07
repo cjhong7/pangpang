@@ -305,12 +305,13 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <div class="screen" id="screen-login">
   <div class="game-title" style="font-size:clamp(1.8rem,5vw,3rem);">☁️ 온라인 시작</div>
   <div id="login-tabs" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
-    <button id="tab-direct" class="login-tab gesture-btn active" onclick="switchLoginTab('direct')" style="padding:10px 24px;border:none;border-radius:24px;background:rgba(255,255,255,.25);color:#fff;font-weight:800;cursor:pointer;transition:all .2s;">🏫 학교명 입력</button>
-    <button id="tab-code" class="login-tab gesture-btn" onclick="switchLoginTab('code')" style="padding:10px 24px;border:none;border-radius:24px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-weight:800;cursor:pointer;transition:all .2s;">📲 코드로 참여</button>
+    <button id="tab-direct" class="login-tab gesture-btn active" onclick="switchLoginTab('direct')" style="padding:10px 24px;border:none;border-radius:24px;background:rgba(255,255,255,.25);color:#fff;font-weight:800;cursor:pointer;transition:all .2s;">🏫 교사 로그인</button>
+    <button id="tab-code" class="login-tab gesture-btn" onclick="switchLoginTab('code')" style="padding:10px 24px;border:none;border-radius:24px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-weight:800;cursor:pointer;transition:all .2s;">📲 학생 참여코드</button>
   </div>
   <div class="login-box">
-    <!-- 경로 1: 학교명 입력 -->
+    <!-- 경로 1: 교사 로그인 -->
     <div id="panel-direct" class="login-panel">
+      <div style="color:rgba(255,255,255,.55);font-size:.82rem;margin-bottom:4px;">👩‍🏫 교사·관리자 전용 — 학생은 QR 코드로 참여하세요</div>
       <div><span class="lbl">학교 이름</span></div>
       <input class="inp" id="login-school" type="text" placeholder="예: OO초등학교" autocomplete="off">
       <label style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.75);font-size:.88rem;cursor:pointer;align-self:flex-start;">
@@ -320,9 +321,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       <div class="warn-text">※ 체크 해제 시 이 기기에 학교 이름이 저장되지 않습니다.</div>
       <button class="btn btn-primary gesture-btn" onclick="submitLogin()">시작하기 →</button>
     </div>
-    <!-- 경로 2: 코드 입력 -->
+    <!-- 경로 2: 학생 참여코드 직접 입력 (QR 스캔이 불가한 경우 대비) -->
     <div id="panel-code" class="login-panel" style="display:none;">
-      <div><span class="lbl">참여코드 (영어 4글자)</span></div>
+      <div style="color:rgba(255,255,255,.55);font-size:.82rem;margin-bottom:4px;">📌 QR 스캔이 어려운 경우에만 사용하세요</div>
+      <div><span class="lbl">참여코드 입력</span></div>
       <input class="inp" id="code-input" type="text" placeholder="예: ABCD"
         maxlength="20" autocomplete="off" spellcheck="false"
         style="font-size:2rem;text-align:center;letter-spacing:.4em;font-weight:900;text-transform:uppercase;"
@@ -2256,12 +2258,47 @@ function copyScopeCode(prefix){
   if(st){st.style.color='#6bcb77';st.textContent='✅ 클립보드에 복사되었습니다!';setTimeout(()=>st.textContent='',2000);}
 }
 function copyClsCode(g){ copyScopeCode('cls'+g); }
+// ── URL 파라미터 입장 (QR 코드 스캔) ─────────────────────
+function checkURLParams(){
+  try{
+    const p=new URLSearchParams(location.search);
+    const s=p.get('s'), gas=p.get('gas');
+    if(!s||!gas) return false;
+    const sc=p.get('sc')||'';
+    const g=parseInt(p.get('g'))||0;
+    const c=parseInt(p.get('c'))||0;
+    const pwh=p.get('p')||'';
+    history.replaceState({},document.title,location.pathname);
+    _applyCodePayload({s,sc,g,c,u:gas,p:pwh});
+    return true;
+  }catch(e){return false;}
+}
+
+// ── QR 코드용 URL 생성 ────────────────────────────────────
+function _buildQRUrl(sc,g,c){
+  const d=driveCfg();
+  const base=location.origin+location.pathname;
+  const params=new URLSearchParams({
+    s:school||'',gas:d.url||'',
+    sc:sc||'',g:g||0,c:c||0,
+    p:getAdminHash()||hashPW(getAdminPW())
+  });
+  return base+'?'+params.toString();
+}
+
 function showScopeQR(prefix){
-  const v=document.getElementById(prefix+'-code-disp').value;
-  if(!v){alert('먼저 코드를 생성해주세요.');return;}
-  const c=document.getElementById('qr-canvas');
-  c.innerHTML='';
-  new QRCode(c,{text:v,width:256,height:256,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+  if(!school){alert('먼저 학교 이름을 설정하세요.');return;}
+  let sc='전체',g=0,c=0;
+  if(prefix==='whole'){sc='전체';g=0;c=0;}
+  else if(/^g\d$/.test(prefix)){sc='학년';g=parseInt(prefix[1]);c=0;}
+  else if(/^cls\d$/.test(prefix)){sc='반';g=parseInt(prefix[3]);c=_clsSel[g]||1;}
+  const url=_buildQRUrl(sc,g,c);
+  const d=driveCfg();
+  const cv=document.getElementById('qr-canvas');
+  cv.innerHTML='';
+  new QRCode(cv,{text:url,width:256,height:256,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+  const warn=document.getElementById('qr-warn');
+  if(warn) warn.style.display=d.url?'none':'block';
   document.getElementById('qr-modal').style.display='flex';
 }
 function showClsQR(g){ showScopeQR('cls'+g); }
@@ -2534,7 +2571,7 @@ function updatePWStrength(val){
 // ═════════════════════════════════════════════
 window.addEventListener('load',()=>{
   startCameraAndHands();
-  show('mode');  // 항상 모드 선택 화면부터 시작
+  if(!checkURLParams()) show('mode');
 });
 document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 </script>
@@ -2542,10 +2579,15 @@ document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 <!-- ══ MODALS ══ -->
 <!-- QR 코드 모달 -->
 <div id="qr-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:#222;padding:20px;border-radius:16px;text-align:center;">
-    <h3 style="color:#fff;margin-bottom:12px;">📱 QR 코드로 공유</h3>
-    <div id="qr-canvas" style="background:#fff;padding:12px;border-radius:8px;width:280px;height:280px;display:flex;align-items:center;justify-content:center;"></div>
-    <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin-top:12px;">다른 교사가 모바일로 이 QR 코드를 스캔하면 코드가 자동 입력됩니다.</p>
+  <div style="background:#222;padding:20px;border-radius:16px;text-align:center;max-width:340px;width:92%;">
+    <h3 style="color:#fff;margin-bottom:12px;">📱 학생 참여 QR 코드</h3>
+    <div id="qr-canvas" style="background:#fff;padding:12px;border-radius:8px;width:280px;height:280px;display:flex;align-items:center;justify-content:center;margin:0 auto;"></div>
+    <p style="color:rgba(255,255,255,.8);font-size:.95rem;margin-top:12px;line-height:1.5;">
+      📌 학생이 폰 카메라로 스캔하면<br>앱이 자동으로 열리고 설정이 적용됩니다.
+    </p>
+    <div id="qr-warn" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(255,180,0,.15);border-radius:8px;color:#ffcc44;font-size:.85rem;">
+      ⚠️ GAS URL이 없어 점수가 클라우드에 저장되지 않습니다.<br>환경설정 → Google Sheets 연동을 먼저 설정하세요.
+    </div>
     <button class="btn btn-sm btn-primary" onclick="closeQRModal()" style="margin-top:16px;">닫기</button>
   </div>
 </div>
