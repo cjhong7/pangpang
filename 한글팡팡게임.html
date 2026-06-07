@@ -88,11 +88,6 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .s-btn .sd{font-size:1rem;margin-top:6px;}
 .s-btn .sp{font-size:.92rem;color:#ffd93d;margin-top:4px;}
 .s-btn.sel .sp{color:#fff;}
-.speed-row{display:flex;align-items:center;gap:14px;color:#fff;flex-wrap:wrap;justify-content:center;}
-.speed-row label{font-size:1.2rem;font-weight:800;}
-.spd-btn{padding:13px 28px;border-radius:30px;border:2px solid rgba(255,255,255,.35);
-  background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:1.1rem;font-weight:800;font-family:inherit;transition:all .2s;}
-.spd-btn.sel{background:linear-gradient(135deg,#4cc9f0,#4361ee);border-color:transparent;}
 
 /* ──── ANALYSIS ──── */
 #screen-analysis{flex-direction:column;align-items:flex-start;justify-content:flex-start;
@@ -456,12 +451,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 
   </div>
 
-  <div class="speed-row">
-    <label>속도 선택:</label>
-    <button class="spd-btn sel gesture-btn" id="spd-1" onclick="selectSpeed(1)">🐢 느림</button>
-    <button class="spd-btn gesture-btn" id="spd-2" onclick="selectSpeed(2)">🐇 보통</button>
-    <button class="spd-btn gesture-btn" id="spd-3" onclick="selectSpeed(3)">🚀 빠름</button>
-  </div>
 </div>
 
 <!-- ══ COUNTDOWN ══ -->
@@ -544,7 +533,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
           <tr>
             <th>이름</th>
             <th>단계</th>
-            <th>속도</th>
             <th>점수</th>
             <th>완료/전체</th>
             <th>시간</th>
@@ -1062,7 +1050,7 @@ function lbKey(){
 
 // ── State ──
 let playerName='', playerScore=0;
-let stage=0, speed=1;
+let stage=0;
 let gameActive=false, timeLeft=60;
 let timerInt=null, spawnInt=null;
 let wordQueue=[], wordsDone=0, currentTarget='';
@@ -1074,7 +1062,6 @@ let dwellEl=null, dwellTimer=null;
 const DWELL_MS=700;
 let wrongWordsSession=[], wrongClickCount=0, gameStartTime=0;
 
-const SPEEDS={1:9,2:6,3:3.5};
 const PTS={1:2,2:4,3:6,4:8,5:10};
 const SCREEN_DISP={mode:'flex',login:'flex',scope:'flex',intro:'flex',name:'flex',stage:'flex',countdown:'flex',game:'block',end:'flex',settings:'flex',analysis:'flex'};
 
@@ -1520,7 +1507,7 @@ async function cloudSaveScore(entry){
         secret:d.secret, school:entry.school||school,
         name:entry.name, score:entry.score,
         grade:scopeGrade||0, cls:scopeClass||0,
-        stage:entry.stage||'', speed:entry.speed||'',
+        stage:entry.stage||'',
         wordCount:entry.wordCount||0, totalTarget:entry.totalTarget||20,
         timeSpent:entry.timeSpent||0, correctRate:entry.correctRate||0,
         wrongWords:(entry.wrongWords||[]).join(','),
@@ -1544,7 +1531,7 @@ async function refreshCloudLB(){
         .forEach(r=>{
           const entry={
             name:r.name, score:Number(r.score)||0,
-            stage:r.stage, speed:r.speed,
+            stage:r.stage,
             wordCount:Number(r.wordCount)||0, totalTarget:Number(r.totalTarget)||20,
             timeSpent:Number(r.timeSpent)||0, correctRate:Number(r.correctRate)||0,
             wrongWords:r.wrongWords?String(r.wrongWords).split(',').filter(w=>w):[],
@@ -1610,8 +1597,6 @@ function getFilteredData(){
 
 function renderAnalysis(){
   const data=getFilteredData();
-  const SPEED_LBL={1:'🐢 느림',2:'🐇 보통',3:'🚀 빠름'};
-
   // 통계
   const cnt=data.length;
   const avgScore=cnt?+(data.reduce((s,e)=>s+(e.score||0),0)/cnt).toFixed(1):0;
@@ -1636,7 +1621,6 @@ function renderAnalysis(){
       <tr>
         <td>${e.name||'-'}</td>
         <td>${e.stage!=null?e.stage+'단계':'-'}</td>
-        <td style="font-size:.8rem">${SPEED_LBL[e.speed]||'-'}</td>
         <td style="color:#ffd93d;font-weight:800;">${e.score||0}</td>
         <td>${e.wordCount!=null?e.wordCount+'/'+(e.totalTarget||20):'-'}</td>
         <td>${e.timeSpent!=null?e.timeSpent+'초':'-'}</td>
@@ -1668,12 +1652,10 @@ function renderAnalysis(){
 function downloadAsExcel(){
   const data=getFilteredData();
   if(!data.length){alert('다운로드할 데이터가 없습니다.');return;}
-  const SPEED_LBL={1:'느림',2:'보통',3:'빠름'};
-  const header=['이름','단계','속도','점수','완료단어','총단어','소요시간(초)','정답률(%)','틀린단어','날짜'];
+  const header=['이름','단계','점수','완료단어','총단어','소요시간(초)','정답률(%)','틀린단어','날짜'];
   const rows=data.map(e=>[
     e.name||'',
     e.stage!=null?e.stage+'단계':'',
-    SPEED_LBL[e.speed]||'',
     e.score||0,
     e.wordCount||0,
     e.totalTarget||20,
@@ -1754,11 +1736,6 @@ function selectStage(n){
   sb.style.background='linear-gradient(135deg,#43e97b,#38f9d7)';
   sb.style.borderColor='transparent';
 }
-function selectSpeed(n){
-  speed=n;
-  document.querySelectorAll('.spd-btn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('spd-'+n).classList.add('sel');
-}
 
 // ═════════════════════════════════════════════
 // COUNTDOWN → GAME
@@ -1796,7 +1773,7 @@ function startGame(){
   nextTarget();updateTimer();
   timerInt=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0)endGame(false);},1000);
   spawnBatch();
-  const delay=Math.max(1200,SPEEDS[speed]*600);
+  const delay=5400;
   spawnInt=setInterval(()=>{if(!gameActive){clearInterval(spawnInt);return;}spawnBatch(1);ensureTarget();fillToBmin();},delay);
 }
 function updateTimer(){
@@ -1879,7 +1856,7 @@ function spawnWord(word, _unused=false){
   el.style.background=`radial-gradient(circle at 33% 28%,rgba(255,255,255,.72) 0%,hsla(${h},75%,72%,.28) 38%,hsla(${h},65%,62%,.1) 68%,transparent)`;
   el.style.borderColor=`hsla(${h},55%,88%,.72)`;
   el.style.boxShadow=`0 0 18px hsla(${h},65%,65%,.35),inset 0 2px 8px rgba(255,255,255,.4),inset 0 -2px 5px hsla(${h},60%,55%,.18)`;
-  const dur=Math.max(2,SPEEDS[speed]+((Math.random()-.5)*2));
+  const dur=Math.max(2,9+((Math.random()-.5)*2));
   el.style.animationDuration=dur+'s';
   // 화면 위 절반에서만 등장 (최대 40% 진행 위치)
   el.style.animationDelay=(-dur*Math.random()*0.40)+'s';
@@ -1930,7 +1907,7 @@ function endGame(completed){
   const correctRate=totalAttempts>0?+(wordsDone/totalAttempts*100).toFixed(1):100;
   addScore({
     name:playerName, score:playerScore,
-    stage, speed, wordCount:wordsDone, totalTarget:20,
+    stage, wordCount:wordsDone, totalTarget:20,
     timeSpent, correctRate,
     wrongWords:[...wrongWordsSession],
     completed,
