@@ -17,8 +17,10 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .cam-tint{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.42);z-index:1;}
 .screen{position:fixed;top:0;left:0;width:100%;height:100%;display:none;z-index:10;}
 
-#settingsBtn{position:fixed;top:16px;right:16px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.35);color:#fff;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:500;transition:transform .3s;}
+#settingsWrap{position:fixed;top:16px;right:16px;display:flex;align-items:center;gap:6px;z-index:500;}
+#settingsBtn{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.35);color:#fff;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
 #settingsBtn:hover{transform:rotate(90deg);}
+#modeBadgeSm{font-size:.85rem;font-weight:800;padding:3px 7px;border-radius:20px;background:rgba(0,0,0,.45);letter-spacing:-.5px;}
 
 /* Buttons */
 .btn{padding:14px 36px;font-size:clamp(1.1rem,2.5vw,1.6rem);font-weight:800;border:none;border-radius:50px;
@@ -276,7 +278,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <div class="cam-tint"></div>
 <div id="flash-overlay"></div>
 <div id="combo-disp"></div>
-<button id="settingsBtn" onclick="openSettings()">⚙️</button>
+<div id="settingsWrap">
+  <span id="modeBadgeSm"></span>
+  <button id="settingsBtn" onclick="openSettings()">⚙️</button>
+</div>
 
 <!-- ══ MODE SELECT ══ -->
 <div class="screen" id="screen-mode">
@@ -968,7 +973,12 @@ function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
   document.getElementById('screen-'+id).style.display=SCREEN_DISP[id]||'flex';
   curScreen=id;
-  document.getElementById('settingsBtn').style.display=(id==='game'||id==='countdown'||isParticipant)?'none':'flex';
+  const GAME_SCREENS=new Set(['name','stage','countdown','game','end']);
+  const wrap=document.getElementById('settingsWrap');
+  wrap.style.display=(GAME_SCREENS.has(id)||isParticipant)?'none':'flex';
+  const badge=document.getElementById('modeBadgeSm');
+  if(appMode==='online'){badge.textContent='온';badge.style.color='#4cde80';}
+  else{badge.textContent='오';badge.style.color='#aaa';}
   if(typeof clearDwell==='function') clearDwell();
 }
 
