@@ -167,6 +167,18 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .fw.popping{animation:bubblePop .28s ease-out forwards!important;pointer-events:none;
   border-color:rgba(255,240,100,.9);
   box-shadow:0 0 40px rgba(255,220,50,.85),0 0 80px rgba(255,200,50,.45);}
+/* 오답 깜박임 */
+@keyframes wrongFlash{
+  0%,100%{opacity:0;}
+  20%,60%{opacity:1;}
+  40%,80%{opacity:.1;}
+}
+.fw.fw-wrong{pointer-events:none!important;}
+.fw.fw-wrong::after{
+  content:'';position:absolute;inset:0;border-radius:20px;
+  background:rgba(220,20,20,.85);
+  animation:wrongFlash .64s ease forwards;
+  pointer-events:none;z-index:5;}
 .pop-txt{position:fixed;pointer-events:none;z-index:300;font-size:2.2rem;font-weight:800;color:#ffd93d;text-shadow:0 0 18px #ff6b6b;transform:translate(-50%,-50%);animation:popout .55s ease-out forwards;}
 @keyframes popout{0%{transform:translate(-50%,-50%) scale(.5);opacity:1;}55%{transform:translate(-50%,-60%) scale(2);opacity:1;}100%{transform:translate(-50%,-100%) scale(2.5);opacity:0;}}
 .particle{position:fixed;width:11px;height:11px;border-radius:50%;pointer-events:none;z-index:300;}
@@ -1892,24 +1904,9 @@ function handleClick(word,el){
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
     playerScore=Math.max(0,playerScore-1);
     document.getElementById('hud-pscore').textContent=playerScore+'점';
-    // 붉은 깜박임 3회
-    const ob=el.style.borderColor, os=el.style.boxShadow, obg=el.style.background;
-    el.style.pointerEvents='none';
-    let fc=0;
-    const fi=setInterval(()=>{
-      fc++;
-      const on=fc%2===1;
-      el.style.background=on?'rgba(220,30,30,.88)':obg;
-      el.style.borderColor=on?'rgba(255,80,80,.95)':ob;
-      el.style.boxShadow=on?'0 0 30px rgba(255,0,0,.9),inset 0 0 18px rgba(200,0,0,.6)':os;
-      if(fc>=6){
-        clearInterval(fi);
-        el.style.background=obg;
-        el.style.borderColor=ob;
-        el.style.boxShadow=os;
-        el.style.pointerEvents='all';
-      }
-    },100);
+    // 오답 붉은 깜박임 (CSS ::after 오버레이)
+    el.classList.add('fw-wrong');
+    setTimeout(()=>el.classList.remove('fw-wrong'),700);
   }
 }
 function endGame(completed){
