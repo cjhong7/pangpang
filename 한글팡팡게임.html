@@ -1546,32 +1546,53 @@ function _setCloudStatus(msg,color){
   const el=document.getElementById('cloud-save-status');
   if(el){el.textContent=msg;el.style.color=color||'rgba(255,255,255,.5)';}
 }
+async function _gasPost(url,body){
+  const res=await fetch(url,{method:'POST',mode:'cors',redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+  return res.json().catch(()=>({}));
+}
+async function _autoSyncPassword(d){
+  try{
+    await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'setPassword',newPassword:d.secret})});
+  }catch(e){}
+}
 async function cloudSaveScore(entry){
   const d=driveCfg();
   _setCloudStatus('☁️ 클라우드 저장 중...','#ffd93d');
+  const body=JSON.stringify({
+    secret:d.secret, school:entry.school||school,
+    name:entry.name, score:entry.score,
+    grade:scopeGrade||0, cls:scopeClass||0,
+    stage:entry.stage||'',
+    wordCount:entry.wordCount||0, totalTarget:entry.totalTarget||20,
+    timeSpent:entry.timeSpent||0, correctRate:entry.correctRate||0,
+    wrongWords:(entry.wrongWords||[]).join(','),
+    completed:entry.completed?1:0
+  });
   try{
-    const res=await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({
-        secret:d.secret, school:entry.school||school,
-        name:entry.name, score:entry.score,
-        grade:scopeGrade||0, cls:scopeClass||0,
-        stage:entry.stage||'',
-        wordCount:entry.wordCount||0, totalTarget:entry.totalTarget||20,
-        timeSpent:entry.timeSpent||0, correctRate:entry.correctRate||0,
-        wrongWords:(entry.wrongWords||[]).join(','),
-        completed:entry.completed?1:0
-      })});
-    const j=await res.json().catch(()=>({}));
-    if(j&&j.ok===false){
-      _setCloudStatus('❌ 클라우드 저장 실패: '+(j.error||'오류')+'  (환경설정 비밀번호 확인)','#ff9999');
+    const j=await _gasPost(d.url,body);
+    if(j&&j.ok===false&&j.error==='비밀번호 불일치'){
+      // 비밀번호 불일치 → 자동 동기화 후 재시도
+      _setCloudStatus('🔄 비밀번호 자동 복구 중...','#ffd93d');
+      await _autoSyncPassword(d);
+      const j2=await _gasPost(d.url,body);
+      if(j2&&j2.ok===false){
+        _setCloudStatus('❌ 저장 실패: '+(j2.error||'GAS 오류'),'#ff9999');
+      } else {
+        _setCloudStatus('✅ 클라우드 저장 완료 (자동 복구)','#6bcb77');
+        setTimeout(refreshCloudLB,1000);
+      }
+    } else if(j&&j.ok===false){
+      _setCloudStatus('❌ 저장 실패: '+(j.error||'GAS 오류'),'#ff9999');
     } else {
       _setCloudStatus('✅ 클라우드 저장 완료','#6bcb77');
       setTimeout(refreshCloudLB,1000);
     }
   }catch(e){
-    console.warn('클라우드 저장 실패:',e);
-    _setCloudStatus('❌ 클라우드 연결 실패 (로컬엔 저장됨): '+e.message,'#ff9999');
+    console.warn('cloudSaveScore 오류:',e);
+    _setCloudStatus('❌ 연결 실패 (로컬엔 저장됨)','#ff9999');
   }
 }
 async function refreshCloudLB(){
