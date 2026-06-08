@@ -317,25 +317,12 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <div class="screen" id="screen-login">
   <div class="game-title" style="font-size:clamp(1.8rem,5vw,3rem);">☁️ 온라인 시작</div>
   <div id="login-tabs" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
-    <button id="tab-direct" class="login-tab gesture-btn active" onclick="switchLoginTab('direct')" style="padding:10px 22px;border:none;border-radius:24px;background:rgba(255,255,255,.25);color:#fff;font-weight:800;cursor:pointer;transition:all .2s;">🏫 교사 로그인</button>
-    <button id="tab-student" class="login-tab gesture-btn" onclick="switchLoginTab('student')" style="padding:10px 22px;border:none;border-radius:24px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-weight:800;cursor:pointer;transition:all .2s;">👦 학생 참여</button>
+    <button id="tab-student" class="login-tab gesture-btn active" onclick="switchLoginTab('student')" style="padding:10px 22px;border:none;border-radius:24px;background:rgba(255,255,255,.25);color:#fff;font-weight:800;cursor:pointer;transition:all .2s;">👦 학생 참여</button>
     <button id="tab-code" class="login-tab gesture-btn" onclick="switchLoginTab('code')" style="padding:10px 22px;border:none;border-radius:24px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-weight:800;cursor:pointer;transition:all .2s;">📲 참여코드</button>
   </div>
   <div class="login-box">
-    <!-- 경로 1: 교사 로그인 -->
-    <div id="panel-direct" class="login-panel">
-      <div style="color:rgba(255,255,255,.55);font-size:.82rem;margin-bottom:4px;">👩‍🏫 교사·관리자 전용</div>
-      <div><span class="lbl">학교 이름</span></div>
-      <input class="inp" id="login-school" type="text" placeholder="예: OO초등학교" autocomplete="off">
-      <label style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.75);font-size:.88rem;cursor:pointer;align-self:flex-start;">
-        <input type="checkbox" id="remember-school" style="width:18px;height:18px;accent-color:#6bcb77;cursor:pointer;">
-        학교 이름 기억하기
-      </label>
-      <div class="warn-text">※ 체크 해제 시 이 기기에 학교 이름이 저장되지 않습니다.</div>
-      <button class="btn btn-primary gesture-btn" onclick="submitLogin()">시작하기 →</button>
-    </div>
-    <!-- 경로 2: 학생 — 학교이름 입력 후 범위 선택 -->
-    <div id="panel-student" class="login-panel" style="display:none;">
+    <!-- 경로 1: 학생 — 학교이름 입력 후 범위 선택 -->
+    <div id="panel-student" class="login-panel">
       <div style="color:rgba(255,255,255,.55);font-size:.82rem;margin-bottom:4px;">📌 학교 이름을 입력하고 참여 범위를 선택하세요</div>
       <div><span class="lbl">학교 이름</span></div>
       <input class="inp" id="student-school" type="text" placeholder="예: OO초등학교" autocomplete="off">
@@ -1256,31 +1243,15 @@ function chooseOffline(){
 }
 function chooseOnline(){
   appMode='online';
-  _rememberSchool = localStorage.getItem('hpg_remember_school') !== '0';
-  document.getElementById('remember-school').checked = _rememberSchool;
-  document.getElementById('login-school').value = _rememberSchool ? (school||'') : '';
+  switchLoginTab('student');
   show('login');
-}
-function submitLogin(){
-  const s=document.getElementById('login-school').value.trim();
-  if(!s){alert('학교 이름을 입력해주세요.');return;}
-  _rememberSchool=document.getElementById('remember-school').checked;
-  localStorage.setItem('hpg_remember_school', _rememberSchool?'1':'0');
-  appMode='online'; school=s;
-  localStorage.setItem('hpg_mode','online');
-  if(_rememberSchool){ localStorage.setItem('hpg_school',s); }
-  else { localStorage.removeItem('hpg_school'); } // 기억 안 하면 삭제
-  settingsUnlocked=false;
-  isParticipant=false;
-  localStorage.removeItem('hpg_participant');
-  enterScopeScreen();
 }
 
 // ═════════════════════════════════════════════
 // 학교 공유 코드 (방법 1)
 // ═════════════════════════════════════════════
 function switchLoginTab(tab){
-  const ids=['direct','student','code'];
+  const ids=['student','code'];
   ids.forEach(id=>{
     const btn=document.getElementById('tab-'+id);
     const panel=document.getElementById('panel-'+id);
