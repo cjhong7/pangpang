@@ -701,9 +701,8 @@ function doPost(e){
     shs.appendRow(["password",b.newPassword||"0000"]);
     return json_({ok:true});
   }
-  // 참여코드 저장: action=setCode (비밀번호 검증 필요)
+  // 참여코드 저장: action=setCode (GAS URL 자체가 인증 — 별도 비번 불필요)
   if(b.action === "setCode"){
-    if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
     var cs = getCodeSheet_();
     // 기존 같은 코드 삭제
     var rows = cs.getDataRange().getValues();
@@ -2314,9 +2313,15 @@ async function _saveCodeToGAS(code,payload){
         url:payload.u||'', pwh:payload.p||''
       })});
     const j=await res.json().catch(()=>({}));
-    if(j&&j.ok===false) console.warn('setCode 실패:',j.error);
-    return !!j.ok;
-  }catch(e){console.warn('_saveCodeToGAS 오류:',e);return false;}
+    if(j&&j.ok===false){
+      console.warn('setCode GAS 오류:',j.error);
+      return {ok:false, error:j.error};
+    }
+    return {ok:true};
+  }catch(e){
+    console.warn('_saveCodeToGAS 네트워크 오류:',e);
+    return {ok:false, error:e.message};
+  }
 }
 
 async function generateWholeCode(){
@@ -2334,15 +2339,12 @@ async function generateWholeCode(){
     // GAS 활성: 4글자 단축코드 생성 후 저장
     const code=_genCode();
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
-    const ok=await _saveCodeToGAS(code,{s:school||'',sc:'',g:0,c:0,u:d.url,p:pwh});
-    if(ok){
+    const r=await _saveCodeToGAS(code,{s:school||'',sc:'',g:0,c:0,u:d.url,p:pwh});
+    if(r&&r.ok){
       if(area){area.style.display='block';_setCodeDisp(disp,code);}
       if(st){st.style.color='#6bcb77';st.textContent='✅ 참여코드('+code+') 생성됨 — 참여자가 학년·반을 직접 선택합니다.';setTimeout(()=>st.textContent='',5000);}
     }else{
-      // GAS 실패 시 구형 HGP: fallback
-      if(st){st.style.color='#ff9999';st.textContent='⚠️ GAS 저장 실패 — 긴 코드로 생성합니다.';}
-      const fc='HGP:'+_b64enc(JSON.stringify({s:school||'',u:d.url,p:pwh}));
-      if(area){area.style.display='block';_setCodeDisp(disp,fc);}
+      if(st){st.style.color='#ff9999';st.textContent='⚠️ GAS 저장 실패'+(r&&r.error?' ('+r.error+')':'')+' — GAS 재배포 필요';setTimeout(()=>st.textContent='',6000);}
     }
     return;
   }
@@ -2368,14 +2370,12 @@ async function generateScopeCode(sc,g,c,prefix){
   if(d.url){
     const code=_genCode();
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
-    const ok=await _saveCodeToGAS(code,payload);
-    if(ok){
+    const r=await _saveCodeToGAS(code,payload);
+    if(r&&r.ok){
       if(area){area.style.display='block';_setCodeDisp(disp,code);}
       if(st){st.style.color='#6bcb77';st.textContent='✅ '+lbl+' 참여코드('+code+') 생성됨';setTimeout(()=>st.textContent='',4000);}
     }else{
-      if(st){st.style.color='#ff9999';st.textContent='⚠️ GAS 저장 실패 — 긴 코드로 생성합니다.';}
-      const fc='HGP:'+_b64enc(JSON.stringify(payload));
-      if(area){area.style.display='block';_setCodeDisp(disp,fc);}
+      if(st){st.style.color='#ff9999';st.textContent='⚠️ GAS 저장 실패'+(r&&r.error?' ('+r.error+')':'')+' — GAS 재배포 필요';setTimeout(()=>st.textContent='',6000);}
     }
     return;
   }
