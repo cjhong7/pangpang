@@ -690,9 +690,8 @@ function doPost(e){
     });
     b=d;
   }
-  // 비밀번호 동기화: action=setPassword (현재 비밀번호 검증 후 변경)
+  // 비밀번호 동기화: action=setPassword (GAS URL 자체가 인증 — 별도 검증 불필요)
   if(b.action === "setPassword"){
-    if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
     var shs = getSettingsSheet_();
     var sv = shs.getDataRange().getValues();
     for(var si=1;si&lt;sv.length;si++){
