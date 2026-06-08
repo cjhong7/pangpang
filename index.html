@@ -2315,9 +2315,13 @@ async function _saveCodeToGAS(code,payload){
 
 async function generateWholeCode(){
   // 학교전체 참여코드: scope 없음 → 참여자가 범위 직접 선택
-  const d=driveCfg();
   const area=document.getElementById('whole-code-area');
   const disp=document.getElementById('whole-code-disp');
+  if(area&&area.style.display!=='none'&&disp&&disp.textContent.trim()){
+    const cur=disp.textContent.trim();
+    if(!confirm('이미 참여코드 ['+cur+']가 생성되어 있습니다.\n\n새로 생성하면 기존 코드는 사용할 수 없게 됩니다.\n계속 진행하시겠습니까?')) return;
+  }
+  const d=driveCfg();
   const st=document.getElementById('whole-status');
   const pwh=getAdminHash()||hashPW(getAdminPW());
   if(d.url){
@@ -2343,9 +2347,14 @@ async function generateWholeCode(){
 }
 async function generateScopeCode(sc,g,c,prefix){
   // 참여코드: GAS 활성 → 4글자 단축코드, 비활성 → HGP: base64url
-  const d=driveCfg();
   const area=document.getElementById(prefix+'-code-area');
   const disp=document.getElementById(prefix+'-code-disp');
+  if(area&&area.style.display!=='none'&&disp&&disp.textContent.trim()){
+    const cur=disp.textContent.trim();
+    const lbl0=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'전체';
+    if(!confirm('['+lbl0+'] 참여코드 ['+cur+']가 이미 있습니다.\n\n새로 생성하면 기존 코드는 사용할 수 없게 됩니다.\n계속 진행하시겠습니까?')) return;
+  }
+  const d=driveCfg();
   const st=document.getElementById(prefix+'-status');
   const lbl=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'전체';
   const pwh=getAdminHash()||hashPW(getAdminPW());
