@@ -660,8 +660,8 @@ function doGet(e){
     }
     return json_({ok:false,error:"코드를 찾을 수 없습니다."});
   }
-  // 기본: 점수 목록 조회
-  var sh = getSheet_();
+  // 기본: 전체점수 시트에서 조회
+  var sh = getScoreSheet_("전체점수");
   var v = sh.getDataRange().getValues().slice(1);
   var rows2 = v.map(function(r){
     return {
@@ -678,19 +678,18 @@ function doGet(e){
 
 // ── POST: 점수 저장 or 참여코드 저장 ─────────────────────
 function doPost(e){
-  var PASSWORD = getPassword_();  // 게임 환경설정 저장 시 자동 동기화됨
+  var PASSWORD = getPassword_();
   var b;
   try{ b = JSON.parse(e.postData.contents); }
   catch(ex){
-    // URL-encoded form (URLSearchParams)
     var d = {};
-    e.postData.contents.split("&amp;").forEach(function(pair){
+    e.postData.contents.split("&").forEach(function(pair){
       var kv=pair.split("=");
       d[decodeURIComponent(kv[0])]=decodeURIComponent(kv[1]||"");
     });
     b=d;
   }
-  // 비밀번호 동기화: action=setPassword (GAS URL 자체가 인증 — 별도 검증 불필요)
+  // 비밀번호 동기화: action=setPassword (GAS URL 자체가 인증)
   if(b.action === "setPassword"){
     var shs = getSettingsSheet_();
     var sv = shs.getDataRange().getValues();
@@ -700,12 +699,11 @@ function doPost(e){
     shs.appendRow(["password",b.newPassword||"0000"]);
     return json_({ok:true});
   }
-  // 참여코드 저장: action=setCode (GAS URL 자체가 인증 — 별도 비번 불필요)
+  // 참여코드 저장: action=setCode
   if(b.action === "setCode"){
     var cs = getCodeSheet_();
-    // 기존 같은 코드 삭제
     var rows = cs.getDataRange().getValues();
-    for(var i=rows.length-1;i>=1;i--){
+    for(var i=rows.length-1;i&gt;=1;i--){
       if(String(rows[i][0]).toUpperCase()===String(b.code).toUpperCase())
         cs.deleteRow(i+1);
     }
@@ -720,47 +718,54 @@ function doPost(e){
   // 범위 데이터 삭제: action=deleteScope
   if(b.action === "deleteScope"){
     if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
-    var sh2 = getSheet_();
-    var allRows = sh2.getDataRange().getValues();
-    var deleted = 0;
+    var grade2=Number(b.grade||0), cls2=Number(b.cls||0);
+    var shName;
+    if(b.sc==="학년" &amp;&amp; grade2&gt;0) shName=grade2+"학년점수";
+    else if(b.sc==="반" &amp;&amp; grade2&gt;0 &amp;&amp; cls2&gt;0) shName=grade2+"-"+cls2+"점수";
+    else shName="전체점수";
+    var sh2=getScoreSheet_(shName);
+    var allRows=sh2.getDataRange().getValues();
+    var deleted=0;
     for(var di=allRows.length-1;di&gt;=1;di--){
-      var rs=String(allRows[di][0]), rg=Number(allRows[di][3]), rc=Number(allRows[di][4]);
-      if(rs !== String(b.school||"")) continue;
-      if(b.sc==="학년" &amp;&amp; rg !== Number(b.grade||0)) continue;
-      if(b.sc==="반" &amp;&amp; (rg !== Number(b.grade||0) || rc !== Number(b.cls||0))) continue;
-      sh2.deleteRow(di+1); deleted++;
+      if(String(allRows[di][0])===String(b.school||"")){sh2.deleteRow(di+1);deleted++;}
     }
     return json_({ok:true,deleted:deleted});
   }
   // 점수 저장
   if(String(b.secret) !== PASSWORD)
     return json_({ok:false, error:"비밀번호 불일치"});
-  getSheet_().appendRow([
+  var grade=Number(b.grade)||0, cls=Number(b.cls)||0;
+  var row=[
     b.school||"", b.name||"", Number(b.score)||0,
-    Number(b.grade)||0, Number(b.cls)||0,
-    b.stage||"", b.speed||"",
+    grade, cls, b.stage||"", b.speed||"",
     Number(b.wordCount)||0, Number(b.totalTarget)||20,
     Number(b.timeSpent)||0, Number(b.correctRate)||0,
     b.wrongWords||"", Number(b.completed)||0,
     Utilities.formatDate(new Date(),"GMT+9","yyyy-MM-dd HH:mm")
-  ]);
+  ];
+  getScoreSheet_("전체점수").appendRow(row);          // 항상 전체점수에 저장
+  if(grade&gt;0){
+    getScoreSheet_(grade+"학년점수").appendRow(row);  // 학년별 탭
+    if(cls&gt;0)
+      getScoreSheet_(grade+"-"+cls+"점수").appendRow(row); // 반별 탭
+  }
   return json_({ok:true});
 }
 
 // ── 시트 헬퍼 ────────────────────────────────────────────
-function getSheet_(){
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName("점수");
-  if(!sh){ sh = ss.insertSheet("점수");
-    sh.appendRow(["학교","이름","점수","학년","반","단계","속도",
-                  "완료단어","목표단어","소요시간(초)","정답률(%)","틀린단어","완료여부","날짜"]); }
+var SCORE_HDR=["학교","이름","점수","학년","반","단계","속도",
+               "완료단어","목표단어","소요시간(초)","정답률(%)","틀린단어","완료여부","날짜"];
+function getScoreSheet_(name){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var sh=ss.getSheetByName(name);
+  if(!sh){sh=ss.insertSheet(name);sh.appendRow(SCORE_HDR);}
   return sh;
 }
 function getCodeSheet_(){
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName("코드");
-  if(!sh){ sh = ss.insertSheet("코드");
-    sh.appendRow(["코드","학교","범위","학년","반","GAS_URL","PW해시","생성일시"]); }
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var sh=ss.getSheetByName("코드");
+  if(!sh){sh=ss.insertSheet("코드");
+    sh.appendRow(["코드","학교","범위","학년","반","GAS_URL","PW해시","생성일시"]);}
   return sh;
 }
 function getSettingsSheet_(){
