@@ -2305,12 +2305,18 @@ function _genCode(){
 async function _saveCodeToGAS(code,payload){
   const d=driveCfg(); if(!d.url) return false;
   try{
-    const p=new URLSearchParams({action:'setCode',code,
-      school:payload.s||'',scope:payload.sc||'',
-      grade:payload.g||0,cls:payload.c||0,url:payload.u||'',pwh:payload.p||''});
-    const res=await fetch(d.url,{method:'POST',body:p,redirect:'follow'});
-    const j=await res.json(); return !!j.ok;
-  }catch(e){return false;}
+    const res=await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'setCode', secret:d.secret, code,
+        school:payload.s||'', scope:payload.sc||'',
+        grade:payload.g||0, cls:payload.c||0,
+        url:payload.u||'', pwh:payload.p||''
+      })});
+    const j=await res.json().catch(()=>({}));
+    if(j&&j.ok===false) console.warn('setCode 실패:',j.error);
+    return !!j.ok;
+  }catch(e){console.warn('_saveCodeToGAS 오류:',e);return false;}
 }
 
 async function generateWholeCode(){
