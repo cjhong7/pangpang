@@ -644,12 +644,12 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
         </ol>
         <pre id="gas-code">// ── GET: 점수 조회 or 참여코드 조회 ──────────────────────
 function doGet(e){
-  var p = e && e.parameter ? e.parameter : {};
-  // 참여코드 조회: ?action=getCode&code=ABCD
+  var p = e &amp;&amp; e.parameter ? e.parameter : {};
+  // 참여코드 조회: ?action=getCode&amp;code=ABCD
   if(p.action === "getCode"){
     var cs = getCodeSheet_();
     var rows = cs.getDataRange().getValues();
-    for(var i=1;i<rows.length;i++){
+    for(var i=1;i&lt;rows.length;i++){
       if(String(rows[i][0]).toUpperCase()===String(p.code).toUpperCase()){
         return json_({ok:true,
           school:rows[i][1], scope:rows[i][2],
@@ -683,7 +683,7 @@ function doPost(e){
   catch(ex){
     // URL-encoded form (URLSearchParams)
     var d = {};
-    e.postData.contents.split("&").forEach(function(pair){
+    e.postData.contents.split("&amp;").forEach(function(pair){
       var kv=pair.split("=");
       d[decodeURIComponent(kv[0])]=decodeURIComponent(kv[1]||"");
     });
