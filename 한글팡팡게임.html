@@ -690,8 +690,9 @@ function doPost(e){
     });
     b=d;
   }
-  // 비밀번호 동기화: action=setPassword (게임 환경설정 저장 시 자동 호출)
+  // 비밀번호 동기화: action=setPassword (현재 비밀번호 검증 후 변경)
   if(b.action === "setPassword"){
+    if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
     var shs = getSettingsSheet_();
     var sv = shs.getDataRange().getValues();
     for(var si=1;si&lt;sv.length;si++){
@@ -700,8 +701,9 @@ function doPost(e){
     shs.appendRow(["password",b.newPassword||"0000"]);
     return json_({ok:true});
   }
-  // 참여코드 저장: action=setCode
+  // 참여코드 저장: action=setCode (비밀번호 검증 필요)
   if(b.action === "setCode"){
+    if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
     var cs = getCodeSheet_();
     // 기존 같은 코드 삭제
     var rows = cs.getDataRange().getValues();
@@ -2431,18 +2433,24 @@ function showClsQR(g){ showScopeQR('cls'+g); }
 
 async function saveDrive(){
   const url=document.getElementById('drive-url').value.trim();
-  const secret=document.getElementById('drive-secret').value.trim()||'0000';
+  const newSecret=document.getElementById('drive-secret').value.trim()||'0000';
+  const oldSecret=localStorage.getItem('hpg_drive_secret')||'0000'; // 인증용 기존 비번
   localStorage.setItem('hpg_drive_url',url);
-  localStorage.setItem('hpg_drive_secret',secret);
+  localStorage.setItem('hpg_drive_secret',newSecret);
   localStorage.setItem('hpg_drive_enabled',document.getElementById('drive-enabled').checked?'1':'0');
   const st=document.getElementById('drive-status');
   if(url){
     st.style.color='#ffd93d';st.textContent='⏳ GAS에 비밀번호 동기화 중...';
     try{
-      await fetch(url,{method:'POST',mode:'cors',redirect:'follow',
+      const res=await fetch(url,{method:'POST',mode:'cors',redirect:'follow',
         headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({action:'setPassword',newPassword:secret})});
-      st.style.color='#6bcb77';st.textContent='✅ 설정 저장 및 비밀번호 자동 동기화 완료';
+        body:JSON.stringify({action:'setPassword',secret:oldSecret,newPassword:newSecret})});
+      const j=await res.json().catch(()=>({}));
+      if(j&&j.ok===false){
+        st.style.color='#ffb3b3';st.textContent='⚠️ GAS 비밀번호 동기화 실패: '+(j.error||'오류');
+      } else {
+        st.style.color='#6bcb77';st.textContent='✅ 설정 저장 및 비밀번호 자동 동기화 완료';
+      }
     }catch(e){
       st.style.color='#ffb3b3';st.textContent='⚠️ 설정은 저장됐으나 GAS 동기화 실패 — URL을 확인하세요.';
     }
