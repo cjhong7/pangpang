@@ -677,7 +677,7 @@ function doGet(e){
 
 // ── POST: 점수 저장 or 참여코드 저장 ─────────────────────
 function doPost(e){
-  var PASSWORD = "0000";   // ← 원하는 비밀번호로 변경
+  var PASSWORD = getPassword_();  // 게임 환경설정 저장 시 자동 동기화됨
   var b;
   try{ b = JSON.parse(e.postData.contents); }
   catch(ex){
@@ -688,6 +688,16 @@ function doPost(e){
       d[decodeURIComponent(kv[0])]=decodeURIComponent(kv[1]||"");
     });
     b=d;
+  }
+  // 비밀번호 동기화: action=setPassword (게임 환경설정 저장 시 자동 호출)
+  if(b.action === "setPassword"){
+    var shs = getSettingsSheet_();
+    var sv = shs.getDataRange().getValues();
+    for(var si=1;si&lt;sv.length;si++){
+      if(sv[si][0]==="password"){shs.getRange(si+1,2).setValue(b.newPassword||"0000");return json_({ok:true});}
+    }
+    shs.appendRow(["password",b.newPassword||"0000"]);
+    return json_({ok:true});
   }
   // 참여코드 저장: action=setCode
   if(b.action === "setCode"){
@@ -736,6 +746,19 @@ function getCodeSheet_(){
   if(!sh){ sh = ss.insertSheet("코드");
     sh.appendRow(["코드","학교","범위","학년","반","GAS_URL","PW해시","생성일시"]); }
   return sh;
+}
+function getSettingsSheet_(){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var sh=ss.getSheetByName("설정");
+  if(!sh){sh=ss.insertSheet("설정");sh.appendRow(["키","값"]);sh.appendRow(["password","0000"]);}
+  return sh;
+}
+function getPassword_(){
+  try{
+    var rows=getSettingsSheet_().getDataRange().getValues();
+    for(var i=1;i&lt;rows.length;i++){if(rows[i][0]==="password")return String(rows[i][1]);}
+  }catch(e){}
+  return "0000";
 }
 function json_(o){
   return ContentService.createTextOutput(JSON.stringify(o))
@@ -2355,12 +2378,26 @@ function showScopeQR(prefix){
 }
 function showClsQR(g){ showScopeQR('cls'+g); }
 
-function saveDrive(){
-  localStorage.setItem('hpg_drive_url',document.getElementById('drive-url').value.trim());
-  localStorage.setItem('hpg_drive_secret',document.getElementById('drive-secret').value.trim()||'0000');
+async function saveDrive(){
+  const url=document.getElementById('drive-url').value.trim();
+  const secret=document.getElementById('drive-secret').value.trim()||'0000';
+  localStorage.setItem('hpg_drive_url',url);
+  localStorage.setItem('hpg_drive_secret',secret);
   localStorage.setItem('hpg_drive_enabled',document.getElementById('drive-enabled').checked?'1':'0');
   const st=document.getElementById('drive-status');
-  st.style.color='#6bcb77';st.textContent='✅ 구글 드라이브 설정이 저장되었습니다.';
+  if(url){
+    st.style.color='#ffd93d';st.textContent='⏳ GAS에 비밀번호 동기화 중...';
+    try{
+      await fetch(url,{method:'POST',mode:'cors',redirect:'follow',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'setPassword',newPassword:secret})});
+      st.style.color='#6bcb77';st.textContent='✅ 설정 저장 및 비밀번호 자동 동기화 완료';
+    }catch(e){
+      st.style.color='#ffb3b3';st.textContent='⚠️ 설정은 저장됐으나 GAS 동기화 실패 — URL을 확인하세요.';
+    }
+  } else {
+    st.style.color='#6bcb77';st.textContent='✅ 설정이 저장되었습니다.';
+  }
 }
 async function testDrive(){
   const url=document.getElementById('drive-url').value.trim();
