@@ -1243,6 +1243,8 @@ function chooseOffline(){
 }
 function chooseOnline(){
   appMode='online';
+  isParticipant=false;
+  localStorage.removeItem('hpg_participant');
   switchLoginTab('student');
   show('login');
 }
