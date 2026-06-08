@@ -1492,7 +1492,7 @@ function resetClsData(g){
 async function cloudSaveScore(entry){
   const d=driveCfg();
   try{
-    await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
+    const res=await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
         secret:d.secret, school:entry.school||school,
@@ -1504,8 +1504,16 @@ async function cloudSaveScore(entry){
         wrongWords:(entry.wrongWords||[]).join(','),
         completed:entry.completed?1:0
       })});
-    setTimeout(refreshCloudLB,1000);
-  }catch(e){console.warn('클라우드 저장 실패(로컬은 정상 저장됨):',e);}
+    const j=await res.json().catch(()=>({}));
+    if(j&&j.ok===false){
+      alert('☁️ 클라우드 저장 실패: '+(j.error||'알 수 없는 오류')+'\n(환경설정의 드라이브 비밀번호와 GAS PASSWORD가 일치하는지 확인하세요.)');
+    } else {
+      setTimeout(refreshCloudLB,1000);
+    }
+  }catch(e){
+    console.warn('클라우드 저장 실패(로컬은 정상 저장됨):',e);
+    alert('☁️ 클라우드 저장 실패: '+e.message+'\n(로컬에는 정상 저장됨)');
+  }
 }
 async function refreshCloudLB(){
   if(!driveActive())return;
