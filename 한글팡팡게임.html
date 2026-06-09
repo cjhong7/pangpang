@@ -375,6 +375,9 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       <button class="grd-btn gesture-btn" onclick="scGrade(1)">1학년</button>
       <button class="grd-btn gesture-btn" onclick="scGrade(2)">2학년</button>
       <button class="grd-btn gesture-btn" onclick="scGrade(3)">3학년</button>
+      <button class="grd-btn gesture-btn" onclick="scGrade(4)">4학년</button>
+      <button class="grd-btn gesture-btn" onclick="scGrade(5)">5학년</button>
+      <button class="grd-btn gesture-btn" onclick="scGrade(6)">6학년</button>
     </div>
     <button class="btn btn-ghost btn-sm gesture-btn" onclick="scBack(2)">← 뒤로</button>
   </div>
@@ -879,6 +882,57 @@ function json_(o){
         <div class="status-line" id="g3-status"></div>
       </div>
 
+      <div class="gmb">
+        <div class="gmb-title">라. 4학년</div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',4,0)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',4,0,'g4')">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',4,0,'g4-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="g4-code-area" style="display:none;margin-top:8px;">
+          <div class="set-row">
+            <input id="g4-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g4')">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g4')">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="g4-status"></div>
+      </div>
+
+      <div class="gmb">
+        <div class="gmb-title">마. 5학년</div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',5,0)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',5,0,'g5')">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',5,0,'g5-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="g5-code-area" style="display:none;margin-top:8px;">
+          <div class="set-row">
+            <input id="g5-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g5')">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g5')">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="g5-status"></div>
+      </div>
+
+      <div class="gmb">
+        <div class="gmb-title">바. 6학년</div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',6,0)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',6,0,'g6')">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',6,0,'g6-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="g6-code-area" style="display:none;margin-top:8px;">
+          <div class="set-row">
+            <input id="g6-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g6')">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g6')">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="g6-status"></div>
+      </div>
+
       <!-- 학년반별 관리 -->
       <div class="gmb-group">학년반별 관리</div>
 
@@ -970,6 +1024,96 @@ function json_(o){
           </div>
         </div>
         <div class="status-line" id="cls3-status"></div>
+      </div>
+
+      <div class="gmb">
+        <div class="gmb-title">사. 4학년 — 반 선택 후 코드 생성</div>
+        <div class="cls-grid" id="cls4-grid">
+          <button class="cls-btn sel gesture-btn" onclick="selectCls(4,1)">1반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,2)">2반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,3)">3반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,4)">4반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,5)">5반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,6)">6반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,7)">7반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,8)">8반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,9)">9반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(4,10)">10반</button>
+        </div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(4)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(4)">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(4)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="cls4-code-area" style="display:none;margin-top:8px;">
+          <div class="cls-code-lbl" id="cls4-code-lbl"></div>
+          <div class="set-row">
+            <input id="cls4-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyClsCode(4)">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showClsQR(4)">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="cls4-status"></div>
+      </div>
+
+      <div class="gmb">
+        <div class="gmb-title">아. 5학년 — 반 선택 후 코드 생성</div>
+        <div class="cls-grid" id="cls5-grid">
+          <button class="cls-btn sel gesture-btn" onclick="selectCls(5,1)">1반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,2)">2반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,3)">3반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,4)">4반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,5)">5반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,6)">6반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,7)">7반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,8)">8반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,9)">9반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(5,10)">10반</button>
+        </div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(5)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(5)">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(5)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="cls5-code-area" style="display:none;margin-top:8px;">
+          <div class="cls-code-lbl" id="cls5-code-lbl"></div>
+          <div class="set-row">
+            <input id="cls5-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyClsCode(5)">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showClsQR(5)">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="cls5-status"></div>
+      </div>
+
+      <div class="gmb">
+        <div class="gmb-title">자. 6학년 — 반 선택 후 코드 생성</div>
+        <div class="cls-grid" id="cls6-grid">
+          <button class="cls-btn sel gesture-btn" onclick="selectCls(6,1)">1반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,2)">2반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,3)">3반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,4)">4반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,5)">5반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,6)">6반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,7)">7반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,8)">8반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,9)">9반</button>
+          <button class="cls-btn gesture-btn" onclick="selectCls(6,10)">10반</button>
+        </div>
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(6)">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(6)">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(6)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        </div>
+        <div id="cls6-code-area" style="display:none;margin-top:8px;">
+          <div class="cls-code-lbl" id="cls6-code-lbl"></div>
+          <div class="set-row">
+            <input id="cls6-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyClsCode(6)">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showClsQR(6)">QR</button>
+          </div>
+        </div>
+        <div class="status-line" id="cls6-status"></div>
       </div>
     </div>
 
@@ -1815,8 +1959,8 @@ function downloadAsExcel(){
     XLSX.utils.book_append_sheet(wb,_makeSheet(lb),'오프라인');
   } else {
     tryAdd(base+'_전체','전체');
-    for(let g=1;g<=3;g++) tryAdd(base+'_학년_'+g, g+'학년');
-    for(let g=1;g<=3;g++) for(let c=1;c<=10;c++) tryAdd(base+'_반_'+g+'_'+c, g+'학년'+c+'반');
+    for(let g=1;g<=6;g++) tryAdd(base+'_학년_'+g, g+'학년');
+    for(let g=1;g<=6;g++) for(let c=1;c<=10;c++) tryAdd(base+'_반_'+g+'_'+c, g+'학년'+c+'반');
     if(!wb.SheetNames.length){alert('다운로드할 데이터가 없습니다.');return;}
   }
   XLSX.writeFile(wb,`${school||'오프라인'}_전체_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -2212,13 +2356,13 @@ function revealSettings(){
   // 참여코드 섹션: 온라인 전용
   document.getElementById('sec-code-analysis').style.display=appMode==='online'?'block':'none';
   // 코드 표시 영역 초기화
-  ['whole','g1','g2','g3'].forEach(p=>{
+  ['whole','g1','g2','g3','g4','g5','g6'].forEach(p=>{
     const a=document.getElementById(p+'-code-area');
     if(a) a.style.display='none';
     const s=document.getElementById(p+'-status');
     if(s) s.textContent='';
   });
-  [1,2,3].forEach(g=>{
+  [1,2,3,4,5,6].forEach(g=>{
     const a=document.getElementById('cls'+g+'-code-area');
     if(a) a.style.display='none';
     const s=document.getElementById('cls'+g+'-status');
@@ -2384,7 +2528,7 @@ function _b64dec(b64u){
 }
 
 // ── 반 선택 그리드 ──
-let _clsSel={1:1,2:1,3:1}; // 학년별 선택된 반
+let _clsSel={1:1,2:1,3:1,4:1,5:1,6:1}; // 학년별 선택된 반
 function selectCls(g,c){
   _clsSel[g]=c;
   document.querySelectorAll('#cls'+g+'-grid .cls-btn').forEach((btn,i)=>{
