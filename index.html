@@ -711,13 +711,21 @@ function doPost(e){
   if(b.action === "setCode"){
     var cs = getCodeSheet_();
     var rows = cs.getDataRange().getValues();
+    var nScope=String(b.scope||""), nGrade=Number(b.grade)||0, nCls=Number(b.cls)||0;
+    var nSchool=String(b.school||"");
     for(var i=rows.length-1;i&gt;=1;i--){
-      if(String(rows[i][0]).toUpperCase()===String(b.code).toUpperCase())
-        cs.deleteRow(i+1);
+      // 같은 코드 중복 제거
+      var sameCode = String(rows[i][0]).toUpperCase()===String(b.code).toUpperCase();
+      // 같은 범위(학교+범위+학년+반)의 옛 코드 무효화 → 최신 코드만 유효
+      var sameScope = String(rows[i][1])===nSchool
+                   &amp;&amp; String(rows[i][2])===nScope
+                   &amp;&amp; (Number(rows[i][3])||0)===nGrade
+                   &amp;&amp; (Number(rows[i][4])||0)===nCls;
+      if(sameCode || sameScope) cs.deleteRow(i+1);
     }
     cs.appendRow([
-      (b.code||"").toUpperCase(), b.school||"", b.scope||"",
-      Number(b.grade)||0, Number(b.cls)||0,
+      (b.code||"").toUpperCase(), nSchool, nScope,
+      nGrade, nCls,
       b.url||"", b.pwh||"",
       Utilities.formatDate(new Date(),"GMT+9","yyyy-MM-dd HH:mm")
     ]);
@@ -2381,22 +2389,32 @@ function revealSettings(){
   // 참여코드 섹션: 온라인 전용
   document.getElementById('sec-code-analysis').style.display=appMode==='online'?'block':'none';
   // 코드 표시 영역 초기화
-  ['whole','g1','g2','g3','g4','g5','g6'].forEach(p=>{
-    const a=document.getElementById(p+'-code-area');
-    if(a) a.style.display='none';
-    const s=document.getElementById(p+'-status');
-    if(s) s.textContent='';
-  });
+  // 학교전체 코드 복원
+  (function(){
+    const a=document.getElementById('whole-code-area');
+    const disp=document.getElementById('whole-code-disp');
+    const s=document.getElementById('whole-status'); if(s) s.textContent='';
+    const code=_getCodeLocal('전체',0,0);
+    if(code){ if(a) a.style.display='block'; _setCodeDisp(disp,code); }
+    else if(a) a.style.display='none';
+  })();
+  // 학년별 코드 복원
   [1,2,3,4,5,6].forEach(g=>{
-    const a=document.getElementById('cls'+g+'-code-area');
-    if(a) a.style.display='none';
-    const s=document.getElementById('cls'+g+'-status');
-    if(s) s.textContent='';
-    // 반 선택 초기화 (1반 선택 상태로)
+    const a=document.getElementById('g'+g+'-code-area');
+    const disp=document.getElementById('g'+g+'-code-disp');
+    const s=document.getElementById('g'+g+'-status'); if(s) s.textContent='';
+    const code=_getCodeLocal('학년',g,0);
+    if(code){ if(a) a.style.display='block'; _setCodeDisp(disp,code); }
+    else if(a) a.style.display='none';
+  });
+  // 학년반별: 반 선택 초기화(1반) + 선택 반 코드 복원
+  [1,2,3,4,5,6].forEach(g=>{
+    const s=document.getElementById('cls'+g+'-status'); if(s) s.textContent='';
     _clsSel[g]=1;
     document.querySelectorAll('#cls'+g+'-grid .cls-btn').forEach((btn,i)=>{
       btn.classList.toggle('sel',i===0);
     });
+    _refreshClsCodeDisp(g);
   });
   fillSchoolSettings();
   renderWordPreviews(getCustom());
@@ -2559,6 +2577,7 @@ function selectCls(g,c){
   document.querySelectorAll('#cls'+g+'-grid .cls-btn').forEach((btn,i)=>{
     btn.classList.toggle('sel',i+1===c);
   });
+  _refreshClsCodeDisp(g); // 선택한 반의 코드 실시간 표시
 }
 
 // ── 참여코드 표시 헬퍼 ───────────────────────────────────
@@ -2581,6 +2600,32 @@ function _genCode(){
   // I, O 제외(혼동 방지) → 4글자 랜덤 대문자+숫자
   const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let c=''; for(let i=0;i<4;i++) c+=ch[Math.floor(Math.random()*ch.length)]; return c;
+}
+// ── 생성된 참여코드 로컬 저장 (반 선택 시 실시간 표시용) ──
+function _codeKey(sc,g,c){
+  const base='hpg_code_'+(school||'default');
+  if(sc==='학년') return base+'_학년_'+g;
+  if(sc==='반')   return base+'_반_'+g+'_'+c;
+  return base+'_전체';
+}
+function _saveCodeLocal(sc,g,c,code){ try{localStorage.setItem(_codeKey(sc,g,c),code);}catch(e){} }
+function _getCodeLocal(sc,g,c){ try{return localStorage.getItem(_codeKey(sc,g,c))||'';}catch(e){return '';} }
+// 선택된 반의 저장 코드를 해당 학년 블록에 실시간 표시
+function _refreshClsCodeDisp(g){
+  const c=_clsSel[g]||1;
+  const area=document.getElementById('cls'+g+'-code-area');
+  const disp=document.getElementById('cls'+g+'-code-disp');
+  const lbl=document.getElementById('cls'+g+'-code-lbl');
+  const code=_getCodeLocal('반',g,c);
+  if(code){
+    if(lbl) lbl.textContent=g+'학년 '+c+'반 참여코드';
+    if(area) area.style.display='block';
+    _setCodeDisp(disp,code);
+  }else{
+    if(area) area.style.display='none';
+    if(disp) disp.value='';
+    if(lbl) lbl.textContent='';
+  }
 }
 async function _saveCodeToGAS(code,payload){
   const d=driveCfg(); if(!d.url) return false;
@@ -2609,9 +2654,9 @@ async function generateWholeCode(){
   // 학교전체 참여코드: scope 없음 → 참여자가 범위 직접 선택
   const area=document.getElementById('whole-code-area');
   const disp=document.getElementById('whole-code-disp');
-  if(area&&area.style.display!=='none'&&disp&&disp.textContent.trim()){
-    const cur=disp.textContent.trim();
-    if(!confirm('이미 참여코드 ['+cur+']가 생성되어 있습니다.\n\n새로 생성하면 기존 코드는 사용할 수 없게 됩니다.\n계속 진행하시겠습니까?')) return;
+  const existing=_getCodeLocal('전체',0,0);
+  if(existing){
+    if(!confirm('학교전체 이전 코드 ['+existing+']는 사용할 수 없습니다.\n그래도 진행하시겠습니까?')) return;
   }
   const d=driveCfg();
   const st=document.getElementById('whole-status');
@@ -2622,6 +2667,7 @@ async function generateWholeCode(){
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
     const r=await _saveCodeToGAS(code,{s:school||'',sc:'',g:0,c:0,u:d.url,p:pwh});
     if(r&&r.ok){
+      _saveCodeLocal('전체',0,0,code);
       if(area){area.style.display='block';_setCodeDisp(disp,code);}
       if(st){st.style.color='#6bcb77';st.textContent='✅ 참여코드('+code+') 생성됨 — 참여자가 학년·반을 직접 선택합니다.';setTimeout(()=>st.textContent='',5000);}
     }else{
@@ -2631,6 +2677,7 @@ async function generateWholeCode(){
   }
   // GAS 없음: 구형 HGP: 코드
   const code='HGP:'+_b64enc(JSON.stringify({s:school||'',u:'',p:pwh}));
+  _saveCodeLocal('전체',0,0,code);
   if(area){area.style.display='block';_setCodeDisp(disp,code);}
   if(st){st.style.color='#6bcb77';st.textContent='✅ 참여코드가 생성되었습니다. 참여자가 학년·반을 직접 선택합니다.';setTimeout(()=>st.textContent='',4000);}
 }
@@ -2638,14 +2685,14 @@ async function generateScopeCode(sc,g,c,prefix){
   // 참여코드: GAS 활성 → 4글자 단축코드, 비활성 → HGP: base64url
   const area=document.getElementById(prefix+'-code-area');
   const disp=document.getElementById(prefix+'-code-disp');
-  if(area&&area.style.display!=='none'&&disp&&disp.textContent.trim()){
-    const cur=disp.textContent.trim();
-    const lbl0=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'전체';
-    if(!confirm('['+lbl0+'] 참여코드 ['+cur+']가 이미 있습니다.\n\n새로 생성하면 기존 코드는 사용할 수 없게 됩니다.\n계속 진행하시겠습니까?')) return;
+  const lbl0=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'전체';
+  const existing=_getCodeLocal(sc,g,c);
+  if(existing){
+    if(!confirm('['+lbl0+'] 이전 코드 ['+existing+']는 사용할 수 없습니다.\n그래도 진행하시겠습니까?')) return;
   }
   const d=driveCfg();
   const st=document.getElementById(prefix+'-status');
-  const lbl=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'전체';
+  const lbl=lbl0;
   const pwh=getAdminHash()||hashPW(getAdminPW());
   const payload={s:school||'',sc,g,c,u:d.url||'',p:pwh};
   if(d.url){
@@ -2653,6 +2700,7 @@ async function generateScopeCode(sc,g,c,prefix){
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
     const r=await _saveCodeToGAS(code,payload);
     if(r&&r.ok){
+      _saveCodeLocal(sc,g,c,code);
       if(area){area.style.display='block';_setCodeDisp(disp,code);}
       if(st){st.style.color='#6bcb77';st.textContent='✅ '+lbl+' 참여코드('+code+') 생성됨';setTimeout(()=>st.textContent='',4000);}
     }else{
@@ -2662,6 +2710,7 @@ async function generateScopeCode(sc,g,c,prefix){
   }
   // GAS 없음: 구형 HGP: 코드
   const code='HGP:'+_b64enc(JSON.stringify(payload));
+  _saveCodeLocal(sc,g,c,code);
   if(area){area.style.display='block';_setCodeDisp(disp,code);}
   if(st){st.style.color='#6bcb77';st.textContent='✅ '+lbl+' 참여코드 생성됨';setTimeout(()=>st.textContent='',4000);}
 }
