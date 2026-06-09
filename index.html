@@ -724,26 +724,41 @@ function doPost(e){
     return json_({ok:true});
   }
   // 범위 데이터 삭제: action=deleteScope
+  // 관련 탭(전체점수·N학년점수·N-M점수)에서 동시 삭제 + 빈 탭 제거
   if(b.action === "deleteScope"){
     if(String(b.secret) !== PASSWORD) return json_({ok:false,error:"비밀번호 불일치"});
-    var grade2=Number(b.grade||0), cls2=Number(b.cls||0);
-    var shName;
-    if(b.sc==="학년" &amp;&amp; grade2&gt;0) shName=grade2+"학년점수";
-    else if(b.sc==="반" &amp;&amp; grade2&gt;0 &amp;&amp; cls2&gt;0) shName=grade2+"-"+cls2+"점수";
-    else shName="전체점수";
-    // 시트가 없으면 삭제할 것도 없음
     var ss2=SpreadsheetApp.getActiveSpreadsheet();
-    var sh2=ss2.getSheetByName(shName);
-    if(!sh2) return json_({ok:true,deleted:0,note:"시트 없음"});
-    var allRows=sh2.getDataRange().getValues();
-    var deleted=0;
-    for(var di=allRows.length-1;di&gt;=1;di--){
-      if(String(allRows[di][0])===String(b.school||"")){sh2.deleteRow(di+1);deleted++;}
+    var grade2=Number(b.grade||0), cls2=Number(b.cls||0);
+    var schoolName=String(b.school||"");
+    var sheetNames=[], matchFn;
+    if(b.sc==="반" &amp;&amp; grade2&gt;0 &amp;&amp; cls2&gt;0){
+      // 특정 반: 전체점수 + N학년점수 + N-M점수 에서 (학교+학년+반) 일치 행 삭제
+      matchFn=function(r){return String(r[0])===schoolName &amp;&amp; Number(r[3])===grade2 &amp;&amp; Number(r[4])===cls2;};
+      sheetNames=["전체점수", grade2+"학년점수", grade2+"-"+cls2+"점수"];
+    } else if(b.sc==="학년" &amp;&amp; grade2&gt;0){
+      // 학년 전체: 전체점수 + N학년점수 + N-1..N-10점수 에서 (학교+학년) 일치 행 삭제
+      matchFn=function(r){return String(r[0])===schoolName &amp;&amp; Number(r[3])===grade2;};
+      sheetNames=["전체점수", grade2+"학년점수"];
+      for(var cc=1;cc&lt;=10;cc++) sheetNames.push(grade2+"-"+cc+"점수");
+    } else {
+      // 학교 전체: '점수'로 끝나는 모든 시트에서 (학교) 일치 행 삭제
+      matchFn=function(r){return String(r[0])===schoolName;};
+      var allSh=ss2.getSheets();
+      for(var si=0;si&lt;allSh.length;si++){
+        var nm=allSh[si].getName();
+        if(/점수$/.test(nm)) sheetNames.push(nm);
+      }
     }
-    // 데이터가 모두 삭제되어 헤더만 남으면 탭 자체도 삭제
-    // (다음에 점수가 저장될 때 getScoreSheet_() 가 자동으로 재생성)
-    if(sh2.getLastRow()&lt;=1 &amp;&amp; ss2.getSheets().length&gt;1){
-      ss2.deleteSheet(sh2);
+    var deleted=0;
+    for(var k=0;k&lt;sheetNames.length;k++){
+      var sh2=ss2.getSheetByName(sheetNames[k]);
+      if(!sh2) continue;
+      var rows=sh2.getDataRange().getValues();
+      for(var di=rows.length-1;di&gt;=1;di--){
+        if(matchFn(rows[di])){sh2.deleteRow(di+1);deleted++;}
+      }
+      // 헤더만 남으면 탭 자체 삭제 (마지막 1개 시트는 보존, 점수 저장 시 자동 재생성)
+      if(sh2.getLastRow()&lt;=1 &amp;&amp; ss2.getSheets().length&gt;1) ss2.deleteSheet(sh2);
     }
     return json_({ok:true,deleted:deleted});
   }
@@ -953,7 +968,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(1)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(1)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(1)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(1)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',1,0,'cls1-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 1학년전체 데이터 초기화</button>
         </div>
         <div id="cls1-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls1-code-lbl"></div>
@@ -983,7 +999,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(2)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(2)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(2)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(2)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',2,0,'cls2-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 2학년전체 데이터 초기화</button>
         </div>
         <div id="cls2-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls2-code-lbl"></div>
@@ -1013,7 +1030,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(3)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(3)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(3)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(3)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',3,0,'cls3-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 3학년전체 데이터 초기화</button>
         </div>
         <div id="cls3-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls3-code-lbl"></div>
@@ -1043,7 +1061,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(4)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(4)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(4)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(4)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',4,0,'cls4-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 4학년전체 데이터 초기화</button>
         </div>
         <div id="cls4-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls4-code-lbl"></div>
@@ -1073,7 +1092,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(5)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(5)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(5)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(5)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',5,0,'cls5-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 5학년전체 데이터 초기화</button>
         </div>
         <div id="cls5-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls5-code-lbl"></div>
@@ -1103,7 +1123,8 @@ function json_(o){
         <div class="gmb-actions">
           <button class="btn btn-sm btn-ghost gesture-btn" onclick="openClsAnalysis(6)">📊 결과분석</button>
           <button class="btn btn-sm btn-primary gesture-btn" onclick="generateClsCode(6)">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(6)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetClsData(6)" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 반별데이터초기화</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',6,0,'cls6-status')" style="border-color:rgba(255,60,60,.7);color:#ff6666;">🗑 6학년전체 데이터 초기화</button>
         </div>
         <div id="cls6-code-area" style="display:none;margin-top:8px;">
           <div class="cls-code-lbl" id="cls6-code-lbl"></div>
@@ -1718,7 +1739,7 @@ function clearLB(){
 }
 async function resetScopeData(sc,g,c,stId){
   const label=sc==='반'?g+'학년 '+c+'반':sc==='학년'?g+'학년':'학교 전체';
-  if(!confirm('['+label+'] 데이터를 모두 삭제하시겠습니까?\n되돌릴 수 없습니다.'))return;
+  if(!confirm('['+label+'] 데이터를 모두 삭제하시겠습니까?\n전체점수·학년점수 탭에서도 함께 삭제됩니다.\n되돌릴 수 없습니다.'))return;
   const base='hpg_lb_online_'+(school||'default');
   const key=sc==='학년'?base+'_학년_'+g:sc==='반'?base+'_반_'+g+'_'+c:base+'_전체';
   localStorage.removeItem(key);
@@ -1731,7 +1752,8 @@ async function resetScopeData(sc,g,c,stId){
       await fetch(d.url,{method:'POST',mode:'cors',redirect:'follow',
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify({action:'deleteScope',secret:d.secret,school:school||'',sc,grade:g||0,cls:c||0})});
-      if(st){st.style.color='#ffb3b3';st.textContent='🗑 '+label+' 삭제 완료 (로컬+클라우드)';setTimeout(()=>st.textContent='',4000);}
+      await refreshCloudLB(); // 클라우드 기준으로 전체/학년/반 버킷 재동기화 (cascade 반영)
+      if(st){st.style.color='#ffb3b3';st.textContent='🗑 '+label+' 삭제 완료 (전체·학년·반 탭 동시)';setTimeout(()=>st.textContent='',4000);}
     }catch(e){
       if(st){st.style.color='#ffb3b3';st.textContent='🗑 '+label+' 로컬 삭제 완료 (클라우드 연결 실패)';setTimeout(()=>st.textContent='',4000);}
     }
