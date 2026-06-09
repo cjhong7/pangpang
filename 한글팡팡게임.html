@@ -1312,7 +1312,9 @@ async function initCamera(){
 let mpHands=null, mpCamera=null, handReady=false, lastHandHit=0;
 let lastHandFrame=0, handWatchdog=null;
 let lastHandVisible=0;   // 손이 마지막으로 화면에 보인 시각 (performance.now)
-let handDwellEl=null, handDwellTimer=null; // 손 제스처 0.3초 체류 판정용
+let handDwellEl=null, handDwellStart=0, handLastOnBubble=0; // 손 제스처 0.5초 체류 판정용
+const HAND_DWELL_MS=500;  // 같은 버블에 0.5초 이상 머물러야 반응
+const HAND_GRACE_MS=150;  // 짧은 끊김(손 떨림/지터) 허용 시간
 function handTrackingEnabled(){ return localStorage.getItem('hpg_hand')!=='0'; } // 기본 ON
 
 async function startCameraAndHands(){
@@ -1427,16 +1429,10 @@ function checkMenuGesture(tips){
 }
 function checkHandCollision(tips){
   const now=performance.now();
-
-  // 손이 2초 이상 없다가 재등장 → 쿨다운 초기화
-  if(tips.length && now-lastHandVisible>2000) lastHandHit=0;
   if(tips.length) lastHandVisible=now;
 
-  // 손 완전히 사라짐 → 체류 취소
-  if(!tips.length){
-    if(handDwellTimer){clearTimeout(handDwellTimer);handDwellTimer=null;handDwellEl=null;}
-    return;
-  }
+  // 손이 완전히 사라짐 → 체류 즉시 취소
+  if(!tips.length){ handDwellEl=null; return; }
 
   const field=document.getElementById('game-field');
   // 정답·오답 버블 모두 감지 (popping·fw-wrong 제외)
@@ -1451,24 +1447,31 @@ function checkHandCollision(tips){
     }
   }
 
-  // 손끝이 어떤 버블 위에도 없음 →
-  //   버블이 낙하 중일 수 있으므로, 이미 체류 중이면 타이머 유지
-  if(!hitEl) return;
+  // 손끝이 버블 밖에 있음 → 짧은 끊김(지터)은 허용, 그 이상이면 체류 취소
+  if(!hitEl){
+    if(handDwellEl && now-handLastOnBubble>HAND_GRACE_MS) handDwellEl=null;
+    return;
+  }
 
-  // 이미 같은 버블에서 체류 중 → 대기
-  if(hitEl===handDwellEl) return;
+  // 손끝이 버블 위에 있음
+  handLastOnBubble=now;
 
-  // 다른 버블로 이동 → 기존 취소 후 새로 시작
-  if(handDwellTimer){clearTimeout(handDwellTimer);handDwellTimer=null;}
-  handDwellEl=hitEl;
-  handDwellTimer=setTimeout(()=>{
+  // 새 버블로 이동(또는 처음 진입) → 체류 타이머 새로 시작
+  if(hitEl!==handDwellEl){
+    handDwellEl=hitEl;
+    handDwellStart=now;
+    return;
+  }
+
+  // 같은 버블에 계속 머무는 중 → 0.5초 경과 시에만 반응
+  if(now-handDwellStart>=HAND_DWELL_MS){
     const el=handDwellEl;
-    handDwellEl=null; handDwellTimer=null;
-    if(!el||!el.isConnected) return;
-    if(el.classList.contains('popping')||el.classList.contains('fw-wrong')) return;
-    lastHandHit=performance.now();
-    handleClick(el.dataset.word, el);
-  },500); // ← 0.5초 체류해야 반응
+    handDwellEl=null;  // 중복 방지
+    if(el&&el.isConnected&&!el.classList.contains('popping')&&!el.classList.contains('fw-wrong')){
+      lastHandHit=now;
+      handleClick(el.dataset.word, el);
+    }
+  }
 }
 
 // ═════════════════════════════════════════════
