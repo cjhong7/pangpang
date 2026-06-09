@@ -168,11 +168,12 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .fw.popping{animation:bubblePop .28s ease-out forwards!important;pointer-events:none;
   border-color:rgba(255,240,100,.9);
   box-shadow:0 0 40px rgba(255,220,50,.85),0 0 80px rgba(255,200,50,.45);}
-/* 오답 깜박임 */
+/* 오답 깜박임 — 0.3초 1회 */
 @keyframes wrongFlash{
-  0%,100%{opacity:0;}
-  20%,60%{opacity:1;}
-  40%,80%{opacity:.1;}
+  0%   {opacity:0;}
+  20%  {opacity:1;}
+  70%  {opacity:1;}
+  100% {opacity:0;}
 }
 @keyframes wrongFlashScreen{
   0%{background:rgba(220,20,20,.45);}
@@ -181,8 +182,8 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .fw.fw-wrong{pointer-events:none!important;}
 .fw.fw-wrong::after{
   content:'';position:absolute;top:0;left:0;right:0;bottom:0;border-radius:50%;
-  background:rgba(220,20,20,.85);
-  animation:wrongFlash .64s ease forwards;
+  background:rgba(210,10,10,.92);
+  animation:wrongFlash .3s ease forwards;
   pointer-events:none;z-index:5;}
 .pop-txt{position:fixed;pointer-events:none;z-index:300;font-size:2.2rem;font-weight:800;color:#ffd93d;text-shadow:0 0 18px #ff6b6b;transform:translate(-50%,-50%);animation:popout .55s ease-out forwards;}
 @keyframes popout{0%{transform:translate(-50%,-50%) scale(.5);opacity:1;}55%{transform:translate(-50%,-60%) scale(2);opacity:1;}100%{transform:translate(-50%,-100%) scale(2.5);opacity:0;}}
@@ -578,7 +579,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       onkeydown="if(event.key==='Enter') unlockSettings()">
     <div style="display:flex;gap:12px;margin-top:4px;">
       <button class="btn btn-primary btn-sm gesture-btn" onclick="unlockSettings()">확인</button>
-      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">← 돌아가기</button>
+      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">🔓 로그아웃</button>
     </div>
     <div class="warn-text" id="gate-err"></div>
   </div>
@@ -587,7 +588,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <div id="set-content" style="display:none;width:100%;">
     <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <div class="set-title">⚙️ 환경설정</div>
-      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">← 돌아가기</button>
+      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">🔓 로그아웃</button>
     </div>
 
     <!-- ① 학교 설정 -->
@@ -723,11 +724,19 @@ function doPost(e){
     if(b.sc==="학년" &amp;&amp; grade2&gt;0) shName=grade2+"학년점수";
     else if(b.sc==="반" &amp;&amp; grade2&gt;0 &amp;&amp; cls2&gt;0) shName=grade2+"-"+cls2+"점수";
     else shName="전체점수";
-    var sh2=getScoreSheet_(shName);
+    // 시트가 없으면 삭제할 것도 없음
+    var ss2=SpreadsheetApp.getActiveSpreadsheet();
+    var sh2=ss2.getSheetByName(shName);
+    if(!sh2) return json_({ok:true,deleted:0,note:"시트 없음"});
     var allRows=sh2.getDataRange().getValues();
     var deleted=0;
     for(var di=allRows.length-1;di&gt;=1;di--){
       if(String(allRows[di][0])===String(b.school||"")){sh2.deleteRow(di+1);deleted++;}
+    }
+    // 데이터가 모두 삭제되어 헤더만 남으면 탭 자체도 삭제
+    // (다음에 점수가 저장될 때 getScoreSheet_() 가 자동으로 재생성)
+    if(sh2.getLastRow()&lt;=1 &amp;&amp; ss2.getSheets().length&gt;1){
+      ss2.deleteSheet(sh2);
     }
     return json_({ok:true,deleted:deleted});
   }
@@ -1149,6 +1158,8 @@ async function initCamera(){
 // ── HAND TRACKING (MediaPipe) ──
 let mpHands=null, mpCamera=null, handReady=false, lastHandHit=0;
 let lastHandFrame=0, handWatchdog=null;
+let lastHandVisible=0;   // 손이 마지막으로 화면에 보인 시각 (performance.now)
+let handDwellEl=null, handDwellTimer=null; // 손 제스처 0.3초 체류 판정용
 function handTrackingEnabled(){ return localStorage.getItem('hpg_hand')!=='0'; } // 기본 ON
 
 async function startCameraAndHands(){
@@ -1168,15 +1179,15 @@ async function startCameraAndHands(){
       v2.play().catch(()=>{document.addEventListener('pointerdown',()=>v2.play().catch(()=>{}),{once:true});});
       handReady=true;
       lastHandFrame=Date.now();
-      // watchdog: 12초 이상 프레임이 없으면 자동 재시작
+      // watchdog: 3초 이상 onHandResults 콜백이 없으면 자동 재시작
       handWatchdog=setInterval(()=>{
         if(!handTrackingEnabled()) return;
-        if(Date.now()-lastHandFrame>12000){
+        if(Date.now()-lastHandFrame>3000){
           console.warn('손 추적 응답 없음 — 자동 재시작');
           clearInterval(handWatchdog); handWatchdog=null;
           startCameraAndHands();
         }
-      },4000);
+      },1000);
       return;
     }catch(e){console.warn('손 추적 시작 실패 → 화면 터치로 진행:',e);handReady=false;}
   }
@@ -1220,6 +1231,7 @@ function onHandResults(res){
       tips.push(videoToScreen(t.x,t.y));
     }
   }
+  if(tips.length) lastHandVisible=performance.now(); // 손 감지 시각 갱신
   if(curScreen==='game'&&gameActive){
     updateCursors(tips);
     checkHandCollision(tips);
@@ -1261,19 +1273,49 @@ function checkMenuGesture(tips){
   },DWELL_MS);
 }
 function checkHandCollision(tips){
-  if(!tips.length||performance.now()-lastHandHit<300) return;
+  const now=performance.now();
+
+  // 손이 2초 이상 없다가 재등장 → 쿨다운 초기화
+  if(tips.length && now-lastHandVisible>2000) lastHandHit=0;
+  if(tips.length) lastHandVisible=now;
+
+  // 손 완전히 사라짐 → 체류 취소
+  if(!tips.length){
+    if(handDwellTimer){clearTimeout(handDwellTimer);handDwellTimer=null;handDwellEl=null;}
+    return;
+  }
+
   const field=document.getElementById('game-field');
-  const targets=[...field.querySelectorAll('.fw')].filter(e=>e.dataset.word===currentTarget);
-  for(const el of targets){
+  // 정답·오답 버블 모두 감지 (popping·fw-wrong 제외)
+  const bubbles=[...field.querySelectorAll('.fw:not(.popping):not(.fw-wrong)')];
+
+  // 현재 손끝이 올라가 있는 버블 탐색
+  let hitEl=null;
+  outer: for(const el of bubbles){
     const r=el.getBoundingClientRect();
     for(const t of tips){
-      if(t.x>=r.left&&t.x<=r.right&&t.y>=r.top&&t.y<=r.bottom){
-        lastHandHit=performance.now();
-        el.dispatchEvent(new MouseEvent('click',{bubbles:true})); // 정답 처리 재사용
-        return;
-      }
+      if(t.x>=r.left&&t.x<=r.right&&t.y>=r.top&&t.y<=r.bottom){hitEl=el;break outer;}
     }
   }
+
+  // 손끝이 어떤 버블 위에도 없음 →
+  //   버블이 낙하 중일 수 있으므로, 이미 체류 중이면 타이머 유지
+  if(!hitEl) return;
+
+  // 이미 같은 버블에서 체류 중 → 대기
+  if(hitEl===handDwellEl) return;
+
+  // 다른 버블로 이동 → 기존 취소 후 새로 시작
+  if(handDwellTimer){clearTimeout(handDwellTimer);handDwellTimer=null;}
+  handDwellEl=hitEl;
+  handDwellTimer=setTimeout(()=>{
+    const el=handDwellEl;
+    handDwellEl=null; handDwellTimer=null;
+    if(!el||!el.isConnected) return;
+    if(el.classList.contains('popping')||el.classList.contains('fw-wrong')) return;
+    lastHandHit=performance.now();
+    handleClick(el.dataset.word, el);
+  },500); // ← 0.5초 체류해야 반응
 }
 
 // ═════════════════════════════════════════════
@@ -1790,7 +1832,7 @@ function startVoice(){
     for(let i=e.resultIndex;i<e.results.length;i++) t+=e.results[i][0].transcript;
     document.getElementById('rec-name').textContent=t;
     if(e.results[e.results.length-1].isFinal){
-      playerName=t.trim();
+      playerName=t.trim().replace(/[.。，,!?！？\s]+$/,'');
       document.getElementById('confirm-btn').style.display='inline-block';
       document.getElementById('mic-icon').style.animation='none';
       document.getElementById('mic-icon').textContent='✅';
@@ -1961,8 +2003,7 @@ function spawnWord(word, _unused=false){
   el.style.animationDelay=(-dur*Math.random()*0.40)+'s';
   const _lp=pickLeft(field);
   el.style.left=_lp+'%';
-  el.addEventListener('click',()=>handleClick(word,el));
-  el.addEventListener('touchstart',e=>{e.preventDefault();handleClick(word,el);},{passive:false});
+  // 터치/클릭은 게임 화면 전체 위임 핸들러에서 처리 (spawnWord 내 개별 리스너 없음)
   field.appendChild(el);
   _spawnReg.set(el,_lp); // X위치 등록 — 다음 버블 spawn 시 겹침 체크에 즉시 반영
   el.addEventListener('animationend',()=>{
@@ -1991,21 +2032,20 @@ function handleClick(word,el){
     comboCount=0;
     wrongClickCount++;
     if(!wrongWordsSession.includes(word)) wrongWordsSession.push(word);
-    playerScore=Math.max(0,playerScore-1);
+    playerScore=Math.max(0,Math.round((playerScore-0.5)*10)/10);
     document.getElementById('hud-pscore').textContent=playerScore+'점';
-    // ① 화면 전체 빨간 오버레이 (CSS animation 없이 순수 display 토글)
+    // ① 화면 전체 빨간 오버레이
     const wo=document.getElementById('wrong-overlay');
     wo.style.display='block';
     setTimeout(()=>wo.style.display='none',480);
-    // ② 화면 중앙에 큰 -1 텍스트 (z-index:9999, CSS animation 없음)
+    // ② 화면 중앙에 -0.5 텍스트
     const p=document.createElement('div');
     p.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-size:5rem;font-weight:900;color:#ff2020;text-shadow:0 0 24px #ff0000,0 3px 8px #000;pointer-events:none;';
-    p.textContent='-1';
-    document.body.appendChild(p);setTimeout(()=>p.remove(),550);
-    // ③ 버블 배경 직접 빨간색으로 (::after 없이 inline style)
-    const origBg=el.style.background;const origBdr=el.style.borderColor;
-    el.style.background='rgba(210,10,10,0.9)';el.style.borderColor='rgba(255,80,80,0.9)';
-    setTimeout(()=>{el.style.background=origBg;el.style.borderColor=origBdr;},550);
+    p.textContent='-0.5';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),600);
+    // ③ 버블 2회 빨간 깜박임 (fw-wrong 클래스 → CSS animation 실행, pointer-events:none 적용)
+    el.classList.add('fw-wrong');
+    setTimeout(()=>el.classList.remove('fw-wrong'),300);
   }
 }
 function endGame(completed){
@@ -2757,10 +2797,45 @@ function updatePWStrength(val){
 // ═════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════
+// ── 게임 화면 전체 터치/클릭 핸들러 (버블 개별 리스너 대신 위임 방식) ──
+function _hitBubbleAt(x,y){
+  if(!gameActive) return;
+  const field=document.getElementById('game-field');
+  if(!field) return;
+  // elementFromPoint 대신 getBoundingClientRect 직접 비교
+  // (pointer-events:none 컨테이너 문제 우회)
+  const bubbles=[...field.querySelectorAll('.fw:not(.popping):not(.fw-wrong)')];
+  // 나중에 추가된 버블(시각적으로 위)부터 탐색
+  for(let i=bubbles.length-1;i>=0;i--){
+    const r=bubbles[i].getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){
+      handleClick(bubbles[i].dataset.word, bubbles[i]);
+      return;
+    }
+  }
+}
+let _lastTouchHit=0;
 window.addEventListener('load',()=>{
   startCameraAndHands();
   // QR 스캔으로 열린 경우 URL 파라미터 자동 처리
   if(!checkURLParams()) show('mode');
+
+  // 터치스크린 직접 터치 — 정답/오답 모두 처리
+  document.getElementById('screen-game').addEventListener('touchstart',e=>{
+    if(!gameActive) return;
+    e.preventDefault();
+    const now=performance.now();
+    if(now-_lastTouchHit<200) return;  // 200ms 내 연타 무시
+    _lastTouchHit=now;
+    const t=e.changedTouches[0];
+    _hitBubbleAt(t.clientX, t.clientY);
+  },{passive:false});
+
+  // 마우스 클릭 (PC 테스트 / 마우스 사용 시)
+  document.getElementById('screen-game').addEventListener('mousedown',e=>{
+    if(!gameActive) return;
+    _hitBubbleAt(e.clientX, e.clientY);
+  });
 });
 document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 </script>
