@@ -21,6 +21,10 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 #settingsBtn{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.35);color:#fff;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
 #settingsBtn:hover{transform:rotate(90deg);}
 #modeBadgeSm{font-size:.85rem;font-weight:800;padding:3px 7px;border-radius:20px;background:rgba(0,0,0,.45);letter-spacing:-.5px;}
+#settingsLogoutBtn{position:fixed;top:16px;right:16px;z-index:600;padding:11px 20px;border-radius:50px;
+  background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:1rem;font-weight:800;
+  cursor:pointer;font-family:inherit;align-items:center;gap:6px;backdrop-filter:blur(8px);transition:all .2s;}
+#settingsLogoutBtn:hover{background:rgba(255,120,120,.3);border-color:rgba(255,150,150,.7);}
 
 /* Buttons */
 .btn{padding:17px 42px;font-size:clamp(1.2rem,2.8vw,1.8rem);font-weight:800;border:none;border-radius:50px;
@@ -168,11 +172,10 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .fw.popping{animation:bubblePop .28s ease-out forwards!important;pointer-events:none;
   border-color:rgba(255,240,100,.9);
   box-shadow:0 0 40px rgba(255,220,50,.85),0 0 80px rgba(255,200,50,.45);}
-/* 오답 깜박임 — 0.3초 1회 */
+/* 오답 깜박임 — 0.3초 또렷한 1회 */
 @keyframes wrongFlash{
   0%   {opacity:0;}
-  20%  {opacity:1;}
-  70%  {opacity:1;}
+  50%  {opacity:1;}
   100% {opacity:0;}
 }
 @keyframes wrongFlashScreen{
@@ -187,6 +190,9 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
   pointer-events:none;z-index:5;}
 .pop-txt{position:fixed;pointer-events:none;z-index:300;font-size:2.2rem;font-weight:800;color:#ffd93d;text-shadow:0 0 18px #ff6b6b;transform:translate(-50%,-50%);animation:popout .55s ease-out forwards;}
 @keyframes popout{0%{transform:translate(-50%,-50%) scale(.5);opacity:1;}55%{transform:translate(-50%,-60%) scale(2);opacity:1;}100%{transform:translate(-50%,-100%) scale(2.5);opacity:0;}}
+/* 정답 +점수 팝업 */
+.score-pop{position:fixed;pointer-events:none;z-index:320;font-weight:900;font-size:clamp(2.2rem,5.5vw,3.6rem);color:#7CFF9B;text-shadow:0 0 20px #00e676,0 3px 8px rgba(0,0,0,.6);}
+@keyframes scorePop{0%{transform:translate(-50%,-50%) scale(.5);opacity:0;}25%{transform:translate(-50%,-75%) scale(1.25);opacity:1;}70%{opacity:1;}100%{transform:translate(-50%,-170%) scale(1.1);opacity:0;}}
 .particle{position:fixed;width:11px;height:11px;border-radius:50%;pointer-events:none;z-index:300;}
 @keyframes pfly{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
 #flash-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:400;display:none;}
@@ -296,6 +302,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <span id="modeBadgeSm"></span>
   <button id="settingsBtn" onclick="openSettings()">⚙️</button>
 </div>
+<button id="settingsLogoutBtn" class="gesture-btn" onclick="closeSettings()" style="display:none;">🔓 로그아웃</button>
 
 <!-- ══ MODE SELECT ══ -->
 <div class="screen" id="screen-mode">
@@ -502,7 +509,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       <div id="an-cloud-status" style="font-size:.8rem;color:rgba(255,255,255,.5);margin-top:4px;"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button class="btn btn-ghost btn-sm gesture-btn" id="an-sync-btn" style="display:none;" onclick="syncAndRefreshAnalysis()">🔄 동기화</button>
       <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeAnalysis()">← 뒤로</button>
       <button class="btn btn-ghost btn-sm gesture-btn" onclick="show('mode')">🏠 홈</button>
     </div>
@@ -579,7 +585,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
       onkeydown="if(event.key==='Enter') unlockSettings()">
     <div style="display:flex;gap:12px;margin-top:4px;">
       <button class="btn btn-primary btn-sm gesture-btn" onclick="unlockSettings()">확인</button>
-      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">🔓 로그아웃</button>
     </div>
     <div class="warn-text" id="gate-err"></div>
   </div>
@@ -588,7 +593,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   <div id="set-content" style="display:none;width:100%;">
     <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <div class="set-title">⚙️ 환경설정</div>
-      <button class="btn btn-ghost btn-sm gesture-btn" onclick="closeSettings()">🔓 로그아웃</button>
     </div>
 
     <!-- ① 학교 설정 -->
@@ -1130,9 +1134,14 @@ function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
   document.getElementById('screen-'+id).style.display=SCREEN_DISP[id]||'flex';
   curScreen=id;
-  const HIDE_SETTINGS=new Set(['mode','name','stage','countdown','game','end']);
+  const HIDE_SETTINGS=new Set(['mode','name','stage','countdown','game','end','settings']);
   const wrap=document.getElementById('settingsWrap');
   wrap.style.display=(HIDE_SETTINGS.has(id)||isParticipant)?'none':'flex';
+  // 환경설정 화면에서는 로그아웃 버튼을 항상 보이게 고정
+  const lo=document.getElementById('settingsLogoutBtn');
+  if(lo) lo.style.display=(id==='settings')?'flex':'none';
+  // 결과분석 화면을 벗어나면 실시간 폴링 중단
+  if(id!=='analysis' && typeof stopAnalysisPolling==='function') stopAnalysisPolling();
   const badge=document.getElementById('modeBadgeSm');
   if(appMode==='online'){badge.textContent='온';badge.style.color='#4cde80';}
   else{badge.textContent='오';badge.style.color='#aaa';}
@@ -2022,8 +2031,15 @@ function handleClick(word,el){
     // 비눗방울 터지는 애니메이션 후 제거
     el.classList.add('popping');
     setTimeout(()=>el.remove(),300);
-    playerScore+=PTS[stage];comboCount++;
+    const gained=PTS[stage];
+    playerScore+=gained;comboCount++;
     document.getElementById('hud-pscore').textContent=playerScore+'점';
+    // +점수 팝업 (버블 위치에서 위로 떠오름)
+    const sp=document.createElement('div');
+    sp.className='score-pop';sp.textContent='+'+gained;
+    sp.style.left=cx+'px';sp.style.top=cy+'px';
+    sp.style.animation='scorePop .8s ease-out forwards';
+    document.body.appendChild(sp);setTimeout(()=>sp.remove(),850);
     boom(cx,cy,word);playOK(comboCount);flashScreen();
     if(comboCount>=3)showCombo(comboCount);
     wordsDone++;nextTarget();
@@ -2276,6 +2292,15 @@ function getLBForScope(sc,g,c){
     return JSON.parse(localStorage.getItem(b+'_전체')||'[]');
   }catch{return[];}
 }
+function _refreshAnalysisNameFilter(){
+  const ov=_anScopeOverride;
+  const lb=ov?getLBForScope(ov.sc,ov.g,ov.c):getLB();
+  const names=[...new Set(lb.map(e=>e.name))].sort();
+  const sel=document.getElementById('an-filter-name');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">모든 학생</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur; // 선택 유지
+}
 function _prepAnalysisUI(sc,g,c,fromSettings){
   _anScopeOverride = fromSettings?{sc,g,c}:null;
   _analysisFromSettings = fromSettings;
@@ -2283,33 +2308,54 @@ function _prepAnalysisUI(sc,g,c,fromSettings){
   document.getElementById('an-scope-info').textContent=(appMode==='online'?(school?school+' · ':''):'')+scopeTxt+' 학생 기록';
   document.getElementById('an-filter-stage').value='';
   document.getElementById('an-sort').value='date';
-  // 동기화 버튼 표시 여부
-  document.getElementById('an-sync-btn').style.display=driveActive()?'inline-flex':'none';
   document.getElementById('an-cloud-status').textContent='';
-  // 이름 필터 갱신
-  const lb=fromSettings?getLBForScope(sc,g,c):getLB();
-  const names=[...new Set(lb.map(e=>e.name))].sort();
-  const sel=document.getElementById('an-filter-name');
-  sel.innerHTML='<option value="">모든 학생</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  _refreshAnalysisNameFilter();
   renderAnalysis();
   show('analysis');
-  // GAS 연동 시 자동 동기화 후 재렌더
-  if(driveActive()) syncAndRefreshAnalysis();
+  // GAS 연동 시: 즉시 1회 동기화 → 실시간 폴링 시작
+  if(driveActive()){
+    syncAndRefreshAnalysis().then(startAnalysisPolling);
+  }
+}
+// 결과분석 화면 범위의 기록 개수 (새 기록 감지용)
+function _anScopeCount(){
+  const ov=_anScopeOverride;
+  const lb=ov?getLBForScope(ov.sc,ov.g,ov.c):getLB();
+  return lb.length;
 }
 async function syncAndRefreshAnalysis(){
   const st=document.getElementById('an-cloud-status');
-  st.textContent='☁️ 클라우드 동기화 중...';
-  document.getElementById('an-sync-btn').disabled=true;
+  if(st){st.style.color='rgba(255,255,255,.55)';st.textContent='☁️ 클라우드 동기화 중...';}
   await refreshCloudLB();
-  // 이름 필터 재갱신
-  const ov=_anScopeOverride;
-  const lb=ov?getLBForScope(ov.sc,ov.g,ov.c):getLB();
-  const names=[...new Set(lb.map(e=>e.name))].sort();
-  const sel=document.getElementById('an-filter-name');
-  sel.innerHTML='<option value="">모든 학생</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  _refreshAnalysisNameFilter();
   renderAnalysis();
-  st.textContent='✅ 최신 데이터 반영됨';
-  document.getElementById('an-sync-btn').disabled=false;
+  _anLastCount=_anScopeCount();
+  if(st){st.style.color='#6bcb77';st.textContent='🟢 실시간 반영 중 · 10초마다 자동 갱신';}
+}
+// ── 결과분석 실시간 폴링 (10초 간격) ──
+let _anPollTimer=null, _anLastCount=-1;
+function startAnalysisPolling(){
+  stopAnalysisPolling();
+  if(!driveActive()) return;
+  _anPollTimer=setInterval(async()=>{
+    if(curScreen!=='analysis'||!driveActive()){stopAnalysisPolling();return;}
+    try{ await refreshCloudLB(); }catch(e){ return; }
+    const cnt=_anScopeCount();
+    if(cnt!==_anLastCount){            // 새 기록이 들어왔을 때만 갱신
+      _anLastCount=cnt;
+      _refreshAnalysisNameFilter();
+      renderAnalysis();
+      const st=document.getElementById('an-cloud-status');
+      if(st){
+        st.style.color='#ffd93d';
+        st.textContent='🔔 새 기록 반영됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        setTimeout(()=>{if(curScreen==='analysis'&&st){st.style.color='#6bcb77';st.textContent='🟢 실시간 반영 중 · 10초마다 자동 갱신';}},2500);
+      }
+    }
+  },10000);
+}
+function stopAnalysisPolling(){
+  if(_anPollTimer){clearInterval(_anPollTimer);_anPollTimer=null;}
 }
 function openScopeAnalysis(sc,g,c){
   _prepAnalysisUI(sc,g,c,true);
@@ -2318,6 +2364,7 @@ function openClsAnalysis(g){
   openScopeAnalysis('반',g,_clsSel[g]||1);
 }
 function closeAnalysis(){
+  stopAnalysisPolling();
   const fromSet=_analysisFromSettings;
   _anScopeOverride=null; _analysisFromSettings=false;
   if(fromSet&&settingsUnlocked) openSettings();
