@@ -855,105 +855,29 @@ function json_(o){
       <div class="gmb-group">학년별 관리</div>
 
       <div class="gmb">
-        <div class="gmb-title">가. 1학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',1,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',1,0,'g1')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',1,0,'g1-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
+        <div class="gmb-title">학년 선택 후 관리</div>
+        <div class="cls-grid" id="grade-grid">
+          <button class="cls-btn sel gesture-btn" onclick="selectGrade(1)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">가</span>1학년</button>
+          <button class="cls-btn gesture-btn" onclick="selectGrade(2)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">나</span>2학년</button>
+          <button class="cls-btn gesture-btn" onclick="selectGrade(3)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">다</span>3학년</button>
+          <button class="cls-btn gesture-btn" onclick="selectGrade(4)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">라</span>4학년</button>
+          <button class="cls-btn gesture-btn" onclick="selectGrade(5)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">마</span>5학년</button>
+          <button class="cls-btn gesture-btn" onclick="selectGrade(6)" style="line-height:1.4;padding:6px 10px;"><span style="font-size:.65rem;opacity:.7;display:block;">바</span>6학년</button>
         </div>
-        <div id="g1-code-area" style="display:none;margin-top:8px;">
+        <div class="gmb-actions">
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openGradeAnalysis()">📊 결과분석</button>
+          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateGradeCode()">🔗 참여코드 생성</button>
+          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetGradeData()" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 학년별 데이터 초기화</button>
+        </div>
+        <div id="grd-code-area" style="display:none;margin-top:8px;">
+          <div class="cls-code-lbl" id="grd-code-lbl"></div>
           <div class="set-row">
-            <input id="g1-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g1')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g1')">QR</button>
+            <input id="grd-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyGradeCode()">복사</button>
+            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showGradeQR()">QR</button>
           </div>
         </div>
-        <div class="status-line" id="g1-status"></div>
-      </div>
-
-      <div class="gmb">
-        <div class="gmb-title">나. 2학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',2,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',2,0,'g2')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',2,0,'g2-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
-        </div>
-        <div id="g2-code-area" style="display:none;margin-top:8px;">
-          <div class="set-row">
-            <input id="g2-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g2')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g2')">QR</button>
-          </div>
-        </div>
-        <div class="status-line" id="g2-status"></div>
-      </div>
-
-      <div class="gmb">
-        <div class="gmb-title">다. 3학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',3,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',3,0,'g3')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',3,0,'g3-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
-        </div>
-        <div id="g3-code-area" style="display:none;margin-top:8px;">
-          <div class="set-row">
-            <input id="g3-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g3')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g3')">QR</button>
-          </div>
-        </div>
-        <div class="status-line" id="g3-status"></div>
-      </div>
-
-      <div class="gmb">
-        <div class="gmb-title">라. 4학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',4,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',4,0,'g4')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',4,0,'g4-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
-        </div>
-        <div id="g4-code-area" style="display:none;margin-top:8px;">
-          <div class="set-row">
-            <input id="g4-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g4')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g4')">QR</button>
-          </div>
-        </div>
-        <div class="status-line" id="g4-status"></div>
-      </div>
-
-      <div class="gmb">
-        <div class="gmb-title">마. 5학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',5,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',5,0,'g5')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',5,0,'g5-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
-        </div>
-        <div id="g5-code-area" style="display:none;margin-top:8px;">
-          <div class="set-row">
-            <input id="g5-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g5')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g5')">QR</button>
-          </div>
-        </div>
-        <div class="status-line" id="g5-status"></div>
-      </div>
-
-      <div class="gmb">
-        <div class="gmb-title">바. 6학년</div>
-        <div class="gmb-actions">
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="openScopeAnalysis('학년',6,0)">📊 결과분석</button>
-          <button class="btn btn-sm btn-primary gesture-btn" onclick="generateScopeCode('학년',6,0,'g6')">🔗 참여코드 생성</button>
-          <button class="btn btn-sm btn-ghost gesture-btn" onclick="resetScopeData('학년',6,0,'g6-status')" style="border-color:rgba(255,100,100,.5);color:#ff9999;">🗑 데이터초기화</button>
-        </div>
-        <div id="g6-code-area" style="display:none;margin-top:8px;">
-          <div class="set-row">
-            <input id="g6-code-disp" type="text" readonly class="set-inp" style="flex:1;font-family:monospace;font-size:.8rem;">
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="copyScopeCode('g6')">복사</button>
-            <button class="btn btn-sm btn-ghost gesture-btn" onclick="showScopeQR('g6')">QR</button>
-          </div>
-        </div>
-        <div class="status-line" id="g6-status"></div>
+        <div class="status-line" id="grd-status"></div>
       </div>
 
       <!-- 학년반별 관리 -->
@@ -2402,15 +2326,13 @@ function revealSettings(){
     if(code){ if(a) a.style.display='block'; _setCodeDisp(disp,code); }
     else if(a) a.style.display='none';
   })();
-  // 학년별 코드 복원
-  [1,2,3,4,5,6].forEach(g=>{
-    const a=document.getElementById('g'+g+'-code-area');
-    const disp=document.getElementById('g'+g+'-code-disp');
-    const s=document.getElementById('g'+g+'-status'); if(s) s.textContent='';
-    const code=_getCodeLocal('학년',g,0);
-    if(code){ if(a) a.style.display='block'; _setCodeDisp(disp,code); }
-    else if(a) a.style.display='none';
+  // 학년별: 선택 초기화(1학년) + 선택 학년 코드 복원
+  _gradeSel=1;
+  document.querySelectorAll('#grade-grid .cls-btn').forEach((btn,i)=>{
+    btn.classList.toggle('sel',i===0);
   });
+  const grdSt=document.getElementById('grd-status'); if(grdSt) grdSt.textContent='';
+  _refreshGradeCodeDisp();
   // 학년반별: 반 선택 초기화(1반) + 선택 반 코드 복원
   [1,2,3,4,5,6].forEach(g=>{
     const s=document.getElementById('cls'+g+'-status'); if(s) s.textContent='';
@@ -2573,6 +2495,41 @@ function _b64dec(b64u){
   const pad='='.repeat((4-s.length%4)%4);
   return decodeURIComponent(escape(atob(s+pad)));
 }
+
+// ── 학년 선택 그리드 (학년별 관리) ──
+let _gradeSel=1; // 현재 선택된 학년
+function selectGrade(g){
+  _gradeSel=g;
+  document.querySelectorAll('#grade-grid .cls-btn').forEach((btn,i)=>{
+    btn.classList.toggle('sel',i+1===g);
+  });
+  _refreshGradeCodeDisp();
+}
+function _refreshGradeCodeDisp(){
+  const g=_gradeSel;
+  const area=document.getElementById('grd-code-area');
+  const disp=document.getElementById('grd-code-disp');
+  const lbl=document.getElementById('grd-code-lbl');
+  const code=_getCodeLocal('학년',g,0);
+  if(code){
+    if(lbl) lbl.textContent=g+'학년 참여코드';
+    if(area) area.style.display='block';
+    _setCodeDisp(disp,code);
+  }else{
+    if(area) area.style.display='none';
+    if(disp) disp.value='';
+    if(lbl) lbl.textContent='';
+  }
+}
+function openGradeAnalysis(){ openScopeAnalysis('학년',_gradeSel,0); }
+function generateGradeCode(){
+  const lbl=document.getElementById('grd-code-lbl');
+  if(lbl) lbl.textContent=_gradeSel+'학년 참여코드';
+  generateScopeCode('학년',_gradeSel,0,'grd');
+}
+function resetGradeData(){ resetScopeData('학년',_gradeSel,0,'grd-status'); }
+function copyGradeCode(){ copyScopeCode('grd'); }
+function showGradeQR(){ showScopeQR('grd'); }
 
 // ── 반 선택 그리드 ──
 let _clsSel={1:1,2:1,3:1,4:1,5:1,6:1}; // 학년별 선택된 반
@@ -2774,6 +2731,7 @@ function showScopeQR(prefix){
   // prefix → sc/g/c 해석
   let sc='전체',g=0,c=0;
   if(prefix==='whole'){sc='전체';g=0;c=0;}
+  else if(prefix==='grd'){sc='학년';g=_gradeSel;c=0;}
   else if(/^g\d$/.test(prefix)){sc='학년';g=parseInt(prefix[1]);c=0;}
   else if(/^cls\d$/.test(prefix)){sc='반';g=parseInt(prefix[3]);c=_clsSel[g]||1;}
   const url=_buildQRUrl(sc,g,c);
