@@ -2017,9 +2017,12 @@ function startVoice(){
   recognition.onresult=(e)=>{
     let t='';
     for(let i=e.resultIndex;i<e.results.length;i++) t+=e.results[i][0].transcript;
-    document.getElementById('rec-name').textContent=t;
-    if(e.results[e.results.length-1].isFinal){
-      playerName=t.trim().replace(/[.。，,!?！？\s]+$/,'');
+    const isFinal=e.results[e.results.length-1].isFinal;
+    // Chrome이 한국어 인식 끝에 마침표를 붙이므로 끝 문장부호 제거
+    const clean=t.trim().replace(/[.。，,!?！？\s]+$/,'');
+    document.getElementById('rec-name').textContent = isFinal ? clean : t; // 표시도 정리된 이름으로
+    if(isFinal){
+      playerName=clean;
       document.getElementById('confirm-btn').style.display='inline-block';
       document.getElementById('mic-icon').style.animation='none';
       document.getElementById('mic-icon').textContent='✅';
