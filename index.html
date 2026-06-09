@@ -716,9 +716,9 @@ function doPost(e){
     for(var i=rows.length-1;i&gt;=1;i--){
       // 같은 코드 중복 제거
       var sameCode = String(rows[i][0]).toUpperCase()===String(b.code).toUpperCase();
-      // 같은 범위(학교+범위+학년+반)의 옛 코드 무효화 → 최신 코드만 유효
+      // 같은 범위(학교+학년+반)의 옛 코드 무효화 → 최신 코드만 유효
+      // (학년+반 값이 범위를 유일하게 구분: 학교전체 0/0, N학년 g/0, N학년M반 g/c)
       var sameScope = String(rows[i][1])===nSchool
-                   &amp;&amp; String(rows[i][2])===nScope
                    &amp;&amp; (Number(rows[i][3])||0)===nGrade
                    &amp;&amp; (Number(rows[i][4])||0)===nCls;
       if(sameCode || sameScope) cs.deleteRow(i+1);
@@ -1619,14 +1619,15 @@ function _applyCodePayload({s,sc,g,c,u,p}){
   settingsUnlocked=false;
   isParticipant=true;
   localStorage.setItem('hpg_participant','1');
-  if(sc){
-    scope=sc; scopeGrade=g; scopeClass=c;
-    localStorage.setItem('hpg_scope',sc);
-    localStorage.setItem('hpg_scope_grade',g);
-    localStorage.setItem('hpg_scope_class',c);
-    enterIntro(); return;
-  }
-  enterScopeScreen();
+  // 범위 타입을 학년/반 값으로부터 결정 (범위 라벨 문자열에 의존하지 않음)
+  //  학교전체(g=0,c=0)→전체 / N학년(g>0,c=0)→학년 / N학년M반(g>0,c>0)→반
+  g=Number(g)||0; c=Number(c)||0;
+  scope=(g>0&&c>0)?'반':(g>0)?'학년':'전체';
+  scopeGrade=g; scopeClass=c;
+  localStorage.setItem('hpg_scope',scope);
+  localStorage.setItem('hpg_scope_grade',g);
+  localStorage.setItem('hpg_scope_class',c);
+  enterIntro();
 }
 
 function enterScopeScreen(){
@@ -2610,6 +2611,13 @@ function _codeKey(sc,g,c){
 }
 function _saveCodeLocal(sc,g,c,code){ try{localStorage.setItem(_codeKey(sc,g,c),code);}catch(e){} }
 function _getCodeLocal(sc,g,c){ try{return localStorage.getItem(_codeKey(sc,g,c))||'';}catch(e){return '';} }
+// 스프레드시트 '범위' 열에 기록할 사람이 읽기 쉬운 라벨 (학교전체 / N학년 / N학년 M반)
+function _scopeLabel(g,c){
+  g=Number(g)||0; c=Number(c)||0;
+  if(g>0&&c>0) return g+'학년 '+c+'반';
+  if(g>0) return g+'학년';
+  return '학교전체';
+}
 // 선택된 반의 저장 코드를 해당 학년 블록에 실시간 표시
 function _refreshClsCodeDisp(g){
   const c=_clsSel[g]||1;
@@ -2665,21 +2673,21 @@ async function generateWholeCode(){
     // GAS 활성: 4글자 단축코드 생성 후 저장
     const code=_genCode();
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
-    const r=await _saveCodeToGAS(code,{s:school||'',sc:'',g:0,c:0,u:d.url,p:pwh});
+    const r=await _saveCodeToGAS(code,{s:school||'',sc:'학교전체',g:0,c:0,u:d.url,p:pwh});
     if(r&&r.ok){
       _saveCodeLocal('전체',0,0,code);
       if(area){area.style.display='block';_setCodeDisp(disp,code);}
-      if(st){st.style.color='#6bcb77';st.textContent='✅ 참여코드('+code+') 생성됨 — 참여자가 학년·반을 직접 선택합니다.';setTimeout(()=>st.textContent='',5000);}
+      if(st){st.style.color='#6bcb77';st.textContent='✅ 학교전체 참여코드('+code+') 생성됨 — 학교전체 게임에 참여합니다.';setTimeout(()=>st.textContent='',5000);}
     }else{
       if(st){st.style.color='#ff9999';st.textContent='⚠️ GAS 저장 실패'+(r&&r.error?' ('+r.error+')':'')+' — GAS 재배포 필요';setTimeout(()=>st.textContent='',6000);}
     }
     return;
   }
   // GAS 없음: 구형 HGP: 코드
-  const code='HGP:'+_b64enc(JSON.stringify({s:school||'',u:'',p:pwh}));
+  const code='HGP:'+_b64enc(JSON.stringify({s:school||'',sc:'학교전체',g:0,c:0,u:'',p:pwh}));
   _saveCodeLocal('전체',0,0,code);
   if(area){area.style.display='block';_setCodeDisp(disp,code);}
-  if(st){st.style.color='#6bcb77';st.textContent='✅ 참여코드가 생성되었습니다. 참여자가 학년·반을 직접 선택합니다.';setTimeout(()=>st.textContent='',4000);}
+  if(st){st.style.color='#6bcb77';st.textContent='✅ 학교전체 참여코드가 생성되었습니다.';setTimeout(()=>st.textContent='',4000);}
 }
 async function generateScopeCode(sc,g,c,prefix){
   // 참여코드: GAS 활성 → 4글자 단축코드, 비활성 → HGP: base64url
@@ -2694,7 +2702,8 @@ async function generateScopeCode(sc,g,c,prefix){
   const st=document.getElementById(prefix+'-status');
   const lbl=lbl0;
   const pwh=getAdminHash()||hashPW(getAdminPW());
-  const payload={s:school||'',sc,g,c,u:d.url||'',p:pwh};
+  // 스프레드시트 '범위' 열에는 사람이 읽기 쉬운 라벨(N학년 / N학년 M반)을 저장
+  const payload={s:school||'',sc:_scopeLabel(g,c),g,c,u:d.url||'',p:pwh};
   if(d.url){
     const code=_genCode();
     if(st){st.style.color='#aaa';st.textContent='⏳ 코드 저장 중...';}
