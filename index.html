@@ -1237,6 +1237,7 @@ let curScreen='mode';
 let dwellEl=null, dwellTimer=null;
 const DWELL_MS=700;
 let wrongWordsSession=[], wrongClickCount=0, gameStartTime=0;
+let gestureDelayUntil=0;
 
 const PTS={1:2,2:4,3:6,4:8,5:10};
 const SCREEN_DISP={mode:'flex',login:'flex',scope:'flex',intro:'flex',name:'flex',stage:'flex',countdown:'flex',game:'block',end:'flex',settings:'flex',analysis:'flex'};
@@ -1366,7 +1367,7 @@ function onHandResults(res){
     checkHandCollision(tips);
   } else if(MENU_SCREENS.has(curScreen)){
     updateCursors(tips);
-    checkMenuGesture(tips);
+    if(Date.now()>=gestureDelayUntil) checkMenuGesture(tips); else clearDwell();
   } else {
     hideCursors();
   }
@@ -2248,6 +2249,8 @@ function showWrongReview(){
 }
 function closeWrongReview(){
   document.getElementById('wr-overlay').style.display='none';
+  clearDwell();
+  gestureDelayUntil=Date.now()+2000;
   show('end');
 }
 
