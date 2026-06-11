@@ -509,7 +509,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <div class="wr-list" id="wr-list"></div>
   </div>
   <div class="wr-confirm-wrap">
-    <button class="wr-confirm gesture-btn" data-dwell="300" onclick="closeWrongReview()">✋ 확인</button>
+    <button class="wr-confirm gesture-btn" data-dwell="200" onclick="closeWrongReview()">✋ 확인</button>
   </div>
 </div>
 
@@ -2231,7 +2231,7 @@ function showWrongReview(){
 }
 function closeWrongReview(){
   clearDwell();
-  gestureDelayUntil=Date.now()+2000;
+  gestureDelayUntil=Date.now()+1500;
   show('end');
 }
 
