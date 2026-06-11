@@ -509,7 +509,7 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <div class="wr-list" id="wr-list"></div>
   </div>
   <div class="wr-confirm-wrap">
-    <button class="wr-confirm gesture-btn" onclick="closeWrongReview()">✋ 확인</button>
+    <button class="wr-confirm gesture-btn" data-dwell="300" onclick="closeWrongReview()">✋ 확인</button>
   </div>
 </div>
 
@@ -1404,7 +1404,7 @@ function checkMenuGesture(tips){
       el.click();
       setTimeout(()=>el.classList.remove('gesture-clicked'),200);
     }
-  },DWELL_MS);
+  },hit.dataset.dwell!==undefined?+hit.dataset.dwell:DWELL_MS);
 }
 function checkHandCollision(tips){
   const now=performance.now();
