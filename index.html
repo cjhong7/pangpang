@@ -122,6 +122,15 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .an-wrong-card .wc{color:rgba(255,255,255,.55);font-size:.8rem;}
 .an-empty{color:rgba(255,255,255,.4);text-align:center;padding:32px;font-size:1rem;}
 
+/* ──── 오답 확인 모달 ──── */
+#wr-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:9995;display:none;align-items:center;justify-content:center;}
+.wr-modal{background:#141428;border:1.5px solid rgba(255,107,107,.45);border-radius:16px;padding:24px 28px;max-width:400px;width:90%;text-align:center;}
+.wr-modal-title{font-size:1.2rem;font-weight:800;color:#ff6b6b;margin-bottom:6px;}
+.wr-modal-sub{font-size:.85rem;color:rgba(255,255,255,.55);margin-bottom:16px;}
+.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:20px;}
+.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:10px;padding:10px 6px;font-size:1.1rem;font-weight:800;color:#fff;}
+.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:12px;padding:12px 0;font-size:1rem;font-weight:700;cursor:pointer;width:100%;margin-top:4px;}
+
 /* ──── COUNTDOWN ──── */
 #screen-countdown{align-items:center;justify-content:center;background:rgba(0,0,0,.7);}
 #countdown-num{font-size:clamp(8rem,25vw,18rem);font-weight:800;color:#ffd93d;text-shadow:0 0 60px #ffd93d;animation:popIn .4s ease-out;}
@@ -297,6 +306,14 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <div class="cam-tint"></div>
 <div id="flash-overlay"></div>
 <div id="wrong-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(210,10,10,0.55);z-index:9990;pointer-events:none;"></div>
+<div id="wr-overlay">
+  <div class="wr-modal">
+    <div class="wr-modal-title">⚠️ 틀린 단어 확인</div>
+    <div class="wr-modal-sub">아래 단어를 다시 한번 확인하세요</div>
+    <div class="wr-word-grid" id="wr-word-grid"></div>
+    <button class="wr-confirm-btn gesture-btn" onclick="closeWrongReview()">✋ 확인</button>
+  </div>
+</div>
 <div id="combo-disp"></div>
 <div id="settingsWrap">
   <span id="modeBadgeSm"></span>
@@ -2192,6 +2209,16 @@ function endGame(completed){
   // 이어서 하기 버튼: 다음 단계 표시
   const ns=Math.min(stage+1,5);
   document.querySelector('.opt-a').textContent=stage<5?'✅ 가. '+ns+'단계로 이어서 하기':'✅ 가. 5단계 다시 하기';
+  if(wrongWordsSession.length>0){ showWrongReview(); }else{ show('end'); }
+}
+
+function showWrongReview(){
+  const grid=document.getElementById('wr-word-grid');
+  grid.innerHTML=wrongWordsSession.map(w=>`<div class="wr-word-card">${w}</div>`).join('');
+  document.getElementById('wr-overlay').style.display='flex';
+}
+function closeWrongReview(){
+  document.getElementById('wr-overlay').style.display='none';
   show('end');
 }
 
