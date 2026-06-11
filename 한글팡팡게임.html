@@ -125,11 +125,11 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 /* ──── 오답 확인 모달 ──── */
 #wr-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0d20;z-index:9995;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
 .wr-modal{width:100%;max-width:720px;text-align:center;display:flex;flex-direction:column;align-items:center;}
-.wr-modal-title{font-size:1.6rem;font-weight:800;color:#ff6b6b;margin-bottom:8px;}
-.wr-modal-sub{font-size:1rem;color:rgba(255,255,255,.55);margin-bottom:24px;}
-.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:32px;width:100%;}
-.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:12px;padding:16px 8px;font-size:1.3rem;font-weight:800;color:#fff;}
-.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:14px;padding:16px 0;font-size:1.1rem;font-weight:700;cursor:pointer;width:100%;max-width:320px;}
+.wr-modal-title{font-size:2rem;font-weight:800;color:#ff6b6b;margin-bottom:10px;}
+.wr-modal-sub{font-size:1.15rem;color:rgba(255,255,255,.55);margin-bottom:28px;}
+.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px;margin-bottom:36px;width:100%;}
+.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:12px;padding:18px 8px;font-size:1.5rem;font-weight:800;color:#fff;}
+.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:14px;padding:18px 0;font-size:1.3rem;font-weight:700;cursor:pointer;width:100%;max-width:360px;}
 
 /* ──── COUNTDOWN ──── */
 #screen-countdown{align-items:center;justify-content:center;background:rgba(0,0,0,.7);}
@@ -1357,7 +1357,11 @@ function onHandResults(res){
     }
   }
   if(tips.length) lastHandVisible=performance.now(); // 손 감지 시각 갱신
-  if(curScreen==='game'&&gameActive){
+  const wrOpen=document.getElementById('wr-overlay').style.display==='flex';
+  if(wrOpen){
+    updateCursors(tips);
+    checkOverlayGesture(tips,'wr-overlay');
+  } else if(curScreen==='game'&&gameActive){
     updateCursors(tips);
     checkHandCollision(tips);
   } else if(MENU_SCREENS.has(curScreen)){
@@ -1392,6 +1396,31 @@ function checkMenuGesture(tips){
       dwellEl.classList.add('gesture-clicked');
       const el=dwellEl;
       dwellEl=null; dwellTimer=null;
+      el.click();
+      setTimeout(()=>el.classList.remove('gesture-clicked'),200);
+    }
+  },DWELL_MS);
+}
+function checkOverlayGesture(tips,overlayId){
+  if(!tips.length){clearDwell();return;}
+  const tip=tips[0];
+  const btns=document.querySelectorAll('#'+overlayId+' .gesture-btn');
+  let hit=null;
+  for(const btn of btns){
+    if(btn.style.display==='none') continue;
+    const r=btn.getBoundingClientRect();
+    if(tip.x>=r.left&&tip.x<=r.right&&tip.y>=r.top&&tip.y<=r.bottom){hit=btn;break;}
+  }
+  if(!hit){clearDwell();return;}
+  if(hit===dwellEl) return;
+  clearDwell();
+  dwellEl=hit;
+  hit.classList.add('gesture-hover');
+  dwellTimer=setTimeout(()=>{
+    if(dwellEl){
+      dwellEl.classList.remove('gesture-hover');
+      dwellEl.classList.add('gesture-clicked');
+      const el=dwellEl;dwellEl=null;dwellTimer=null;
       el.click();
       setTimeout(()=>el.classList.remove('gesture-clicked'),200);
     }
