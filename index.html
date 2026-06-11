@@ -122,14 +122,15 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .an-wrong-card .wc{color:rgba(255,255,255,.55);font-size:.8rem;}
 .an-empty{color:rgba(255,255,255,.4);text-align:center;padding:32px;font-size:1rem;}
 
-/* ──── 오답 확인 모달 ──── */
-#wr-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0d20;z-index:9995;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
-.wr-modal{width:100%;max-width:720px;text-align:center;display:flex;flex-direction:column;align-items:center;}
-.wr-modal-title{font-size:2rem;font-weight:800;color:#ff6b6b;margin-bottom:10px;}
-.wr-modal-sub{font-size:1.15rem;color:rgba(255,255,255,.55);margin-bottom:28px;}
-.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px;margin-bottom:36px;width:100%;}
-.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:12px;padding:18px 8px;font-size:1.5rem;font-weight:800;color:#fff;}
-.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:14px;padding:18px 0;font-size:1.3rem;font-weight:700;cursor:pointer;width:100%;max-width:360px;}
+/* ──── 오답 확인 화면 ──── */
+#screen-wrong-review{flex-direction:column;align-items:center;justify-content:flex-start;background:#0d0d20;overflow-y:auto;padding:40px 20px 28px;}
+.wr-title{font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:#ff6b6b;margin-bottom:8px;text-align:center;}
+.wr-sub{font-size:1.1rem;color:rgba(255,255,255,.55);margin-bottom:24px;text-align:center;}
+.wr-list{width:100%;max-width:640px;display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
+.wr-card{background:rgba(255,107,107,.13);border:1.5px solid rgba(255,107,107,.4);border-radius:12px;padding:18px 24px;text-align:center;}
+.wr-word{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:800;color:#fff;}
+.wr-confirm{padding:16px 48px;border-radius:12px;border:2px solid rgba(67,233,123,.55);font-size:clamp(1.1rem,2.6vw,1.4rem);font-weight:700;cursor:pointer;background:rgba(67,233,123,.18);color:#43e97b;font-family:inherit;}
+.wr-confirm:active{transform:scale(.96);}
 
 /* ──── COUNTDOWN ──── */
 #screen-countdown{align-items:center;justify-content:center;background:rgba(0,0,0,.7);}
@@ -306,14 +307,6 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
 <div class="cam-tint"></div>
 <div id="flash-overlay"></div>
 <div id="wrong-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(210,10,10,0.55);z-index:9990;pointer-events:none;"></div>
-<div id="wr-overlay">
-  <div class="wr-modal">
-    <div class="wr-modal-title">⚠️ 틀린 단어 확인</div>
-    <div class="wr-modal-sub">아래 단어를 다시 한번 확인하세요</div>
-    <div class="wr-word-grid" id="wr-word-grid"></div>
-    <button class="wr-confirm-btn gesture-btn" onclick="closeWrongReview()">✋ 확인</button>
-  </div>
-</div>
 <div id="combo-disp"></div>
 <div id="settingsWrap">
   <span id="modeBadgeSm"></span>
@@ -504,6 +497,14 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
   </div>
   <div class="hud-prog" id="hud-prog">남은 단어: 20개</div>
   <div id="game-field"></div>
+</div>
+
+<!-- ══ WRONG REVIEW ══ -->
+<div class="screen" id="screen-wrong-review">
+  <div class="wr-title">⚠️ 틀린 단어 확인</div>
+  <div class="wr-sub" id="wr-sub-text"></div>
+  <div class="wr-list" id="wr-list"></div>
+  <button class="wr-confirm gesture-btn" onclick="closeWrongReview()">✋ 확인</button>
 </div>
 
 <!-- ══ STAGE END ══ -->
@@ -1240,7 +1241,7 @@ let wrongWordsSession=[], wrongClickCount=0, gameStartTime=0;
 let gestureDelayUntil=0;
 
 const PTS={1:2,2:4,3:6,4:8,5:10};
-const SCREEN_DISP={mode:'flex',login:'flex',scope:'flex',intro:'flex',name:'flex',stage:'flex',countdown:'flex',game:'block',end:'flex',settings:'flex',analysis:'flex'};
+const SCREEN_DISP={mode:'flex',login:'flex',scope:'flex',intro:'flex',name:'flex',stage:'flex',countdown:'flex',game:'block','wrong-review':'flex',end:'flex',settings:'flex',analysis:'flex'};
 
 // ═════════════════════════════════════════════
 // SCREEN MANAGEMENT
@@ -1347,7 +1348,7 @@ function updateCursors(tips){
 }
 function hideCursors(){const c=document.getElementById('hand-cursors');if(c)[...c.children].forEach(d=>d.style.display='none');}
 
-const MENU_SCREENS=new Set(['mode','login','scope','intro','name','stage','end','analysis']);
+const MENU_SCREENS=new Set(['mode','login','scope','intro','name','stage','wrong-review','end','analysis']);
 function onHandResults(res){
   lastHandFrame=Date.now();
   const tips=[];
@@ -1358,11 +1359,7 @@ function onHandResults(res){
     }
   }
   if(tips.length) lastHandVisible=performance.now(); // 손 감지 시각 갱신
-  const wrOpen=document.getElementById('wr-overlay').style.display==='flex';
-  if(wrOpen){
-    updateCursors(tips);
-    checkOverlayGesture(tips,'wr-overlay');
-  } else if(curScreen==='game'&&gameActive){
+  if(curScreen==='game'&&gameActive){
     updateCursors(tips);
     checkHandCollision(tips);
   } else if(MENU_SCREENS.has(curScreen)){
@@ -1397,31 +1394,6 @@ function checkMenuGesture(tips){
       dwellEl.classList.add('gesture-clicked');
       const el=dwellEl;
       dwellEl=null; dwellTimer=null;
-      el.click();
-      setTimeout(()=>el.classList.remove('gesture-clicked'),200);
-    }
-  },DWELL_MS);
-}
-function checkOverlayGesture(tips,overlayId){
-  if(!tips.length){clearDwell();return;}
-  const tip=tips[0];
-  const btns=document.querySelectorAll('#'+overlayId+' .gesture-btn');
-  let hit=null;
-  for(const btn of btns){
-    if(btn.style.display==='none') continue;
-    const r=btn.getBoundingClientRect();
-    if(tip.x>=r.left&&tip.x<=r.right&&tip.y>=r.top&&tip.y<=r.bottom){hit=btn;break;}
-  }
-  if(!hit){clearDwell();return;}
-  if(hit===dwellEl) return;
-  clearDwell();
-  dwellEl=hit;
-  hit.classList.add('gesture-hover');
-  dwellTimer=setTimeout(()=>{
-    if(dwellEl){
-      dwellEl.classList.remove('gesture-hover');
-      dwellEl.classList.add('gesture-clicked');
-      const el=dwellEl;dwellEl=null;dwellTimer=null;
       el.click();
       setTimeout(()=>el.classList.remove('gesture-clicked'),200);
     }
@@ -2243,9 +2215,11 @@ function endGame(completed){
 }
 
 function showWrongReview(){
-  const grid=document.getElementById('wr-word-grid');
-  grid.innerHTML=wrongWordsSession.map(w=>`<div class="wr-word-card">${w}</div>`).join('');
-  document.getElementById('wr-overlay').style.display='flex';
+  const list=document.getElementById('wr-list');
+  list.innerHTML=wrongWordsSession.map(w=>`<div class="wr-card"><div class="wr-word">${w}</div></div>`).join('');
+  const sub=document.getElementById('wr-sub-text');
+  if(sub) sub.textContent=wrongWordsSession.length+'개의 단어를 틀렸어요';
+  show('wrong-review');
 }
 function closeWrongReview(){
   document.getElementById('wr-overlay').style.display='none';
