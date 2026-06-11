@@ -123,13 +123,13 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .an-empty{color:rgba(255,255,255,.4);text-align:center;padding:32px;font-size:1rem;}
 
 /* ──── 오답 확인 모달 ──── */
-#wr-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:9995;display:none;align-items:center;justify-content:center;}
-.wr-modal{background:#141428;border:1.5px solid rgba(255,107,107,.45);border-radius:16px;padding:24px 28px;max-width:400px;width:90%;text-align:center;}
-.wr-modal-title{font-size:1.2rem;font-weight:800;color:#ff6b6b;margin-bottom:6px;}
-.wr-modal-sub{font-size:.85rem;color:rgba(255,255,255,.55);margin-bottom:16px;}
-.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:20px;}
-.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:10px;padding:10px 6px;font-size:1.1rem;font-weight:800;color:#fff;}
-.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:12px;padding:12px 0;font-size:1rem;font-weight:700;cursor:pointer;width:100%;margin-top:4px;}
+#wr-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0d20;z-index:9995;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
+.wr-modal{width:100%;max-width:720px;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.wr-modal-title{font-size:1.6rem;font-weight:800;color:#ff6b6b;margin-bottom:8px;}
+.wr-modal-sub{font-size:1rem;color:rgba(255,255,255,.55);margin-bottom:24px;}
+.wr-word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:32px;width:100%;}
+.wr-word-card{background:rgba(255,107,107,.15);border:1.5px solid rgba(255,107,107,.35);border-radius:12px;padding:16px 8px;font-size:1.3rem;font-weight:800;color:#fff;}
+.wr-confirm-btn{background:rgba(67,233,123,.18);border:2px solid rgba(67,233,123,.55);color:#43e97b;border-radius:14px;padding:16px 0;font-size:1.1rem;font-weight:700;cursor:pointer;width:100%;max-width:320px;}
 
 /* ──── COUNTDOWN ──── */
 #screen-countdown{align-items:center;justify-content:center;background:rgba(0,0,0,.7);}
