@@ -1491,10 +1491,16 @@ function startVoiceInput(inputId, btnId){
   rec.lang='ko-KR'; rec.interimResults=false; rec.maxAlternatives=1;
   btn.classList.add('listening'); btn.textContent='🔴';
   rec.onresult=e=>{
-    document.getElementById(inputId).value=e.results[0][0].transcript.replace(/[.,。、\s]+$/,'');
+    // 끝에 붙는 마침표·쉼표·구두점·공백 모두 제거
+    document.getElementById(inputId).value=e.results[0][0].transcript.replace(/[\s\p{P}]+$/u,'');
     btn.classList.remove('listening'); btn.textContent='🎤';
   };
-  rec.onerror=e=>{ btn.classList.remove('listening'); btn.textContent='🎤'; if(e.error!=='aborted') alert('음성 인식 오류: '+e.error); };
+  rec.onerror=e=>{
+    btn.classList.remove('listening'); btn.textContent='🎤';
+    // 마이크 권한 거부·장치 오류만 알림, 그 외(no-speech, network 등)는 조용히 처리
+    if(e.error==='not-allowed'||e.error==='audio-capture')
+      alert('마이크 권한이 필요합니다. 브라우저 설정에서 마이크를 허용해주세요.');
+  };
   rec.onend=()=>{ btn.classList.remove('listening'); btn.textContent='🎤'; };
   rec.start();
 }
