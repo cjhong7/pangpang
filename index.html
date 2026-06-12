@@ -1486,22 +1486,37 @@ function startVoiceInput(inputId, btnId){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome 또는 Edge를 사용해주세요.'); return; }
   const btn=document.getElementById(btnId);
+  const inp=document.getElementById(inputId);
   if(btn.classList.contains('listening')) return;
   const rec=new SR();
-  rec.lang='ko-KR'; rec.interimResults=false; rec.maxAlternatives=1;
+  rec.lang='ko-KR'; rec.interimResults=true; rec.maxAlternatives=1;
   btn.classList.add('listening'); btn.textContent='🔴';
+  inp.value=''; inp.placeholder='말씀하세요...';
   rec.onresult=e=>{
-    // 끝에 붙는 마침표·쉼표·구두점·공백 모두 제거
-    document.getElementById(inputId).value=e.results[0][0].transcript.replace(/[\s\p{P}]+$/u,'');
-    btn.classList.remove('listening'); btn.textContent='🎤';
+    let interim='', final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    if(final){
+      inp.value=final.replace(/[\s\p{P}]+$/u,'');
+      inp.placeholder='예: OO초등학교';
+      btn.classList.remove('listening'); btn.textContent='🎤';
+    } else {
+      inp.value=interim; // 말하는 중 실시간 표시
+    }
   };
   rec.onerror=e=>{
     btn.classList.remove('listening'); btn.textContent='🎤';
-    // 마이크 권한 거부·장치 오류만 알림, 그 외(no-speech, network 등)는 조용히 처리
+    inp.placeholder='예: OO초등학교';
     if(e.error==='not-allowed'||e.error==='audio-capture')
       alert('마이크 권한이 필요합니다. 브라우저 설정에서 마이크를 허용해주세요.');
   };
-  rec.onend=()=>{ btn.classList.remove('listening'); btn.textContent='🎤'; };
+  rec.onend=()=>{
+    btn.classList.remove('listening'); btn.textContent='🎤';
+    inp.placeholder='예: OO초등학교';
+    inp.value=inp.value.replace(/[\s\p{P}]+$/u,'');
+  };
   rec.start();
 }
 // ═════════════════════════════════════════════
