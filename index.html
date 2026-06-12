@@ -1491,7 +1491,7 @@ function startVoiceInput(inputId, btnId){
   rec.lang='ko-KR'; rec.interimResults=false; rec.maxAlternatives=1;
   btn.classList.add('listening'); btn.textContent='🔴';
   rec.onresult=e=>{
-    document.getElementById(inputId).value=e.results[0][0].transcript;
+    document.getElementById(inputId).value=e.results[0][0].transcript.replace(/[.,。、\s]+$/,'');
     btn.classList.remove('listening'); btn.textContent='🎤';
   };
   rec.onerror=e=>{ btn.classList.remove('listening'); btn.textContent='🎤'; if(e.error!=='aborted') alert('음성 인식 오류: '+e.error); };
