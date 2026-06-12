@@ -54,6 +54,9 @@ body{width:100vw;height:100vh;overflow:hidden;background:#111;font-family:'Nanum
 .inp::placeholder{color:rgba(255,255,255,.45);}
 .inp:focus{outline:none;border-color:#ffd93d;}
 .lbl{color:#ffd93d;font-weight:800;font-size:.95rem;margin-bottom:-6px;}
+.mic-btn{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);border-radius:50%;width:48px;height:48px;font-size:1.3rem;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.mic-btn.listening{background:rgba(255,80,80,.5);border-color:#ff5050;animation:micPulse .8s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
 /* Generic title */
 .game-title{font-size:clamp(2.2rem,7vw,4.5rem);font-weight:800;color:#fff;text-align:center;
@@ -348,7 +351,10 @@ details.guide pre{background:#0a0a14;border:1px solid rgba(255,255,255,.15);bord
     <div id="panel-student" class="login-panel">
       <div style="color:rgba(255,255,255,.55);font-size:.82rem;margin-bottom:4px;">📌 학교 이름을 입력하고 참여 범위를 선택하세요</div>
       <div><span class="lbl">학교 이름</span></div>
-      <input class="inp" id="student-school" type="text" placeholder="예: OO초등학교" autocomplete="off">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="inp" id="student-school" type="text" placeholder="예: OO초등학교" autocomplete="off" style="flex:1;margin-bottom:0;">
+        <button class="mic-btn" id="mic-school" onclick="startVoiceInput('student-school','mic-school')" title="음성으로 입력">🎤</button>
+      </div>
       <button class="btn btn-primary gesture-btn" style="margin-top:4px;" onclick="submitStudentLogin()">참여하기 →</button>
       <div style="color:rgba(255,220,80,.75);font-size:.8rem;margin-top:6px;text-align:center;">
         💡 QR 코드 스캔 시 학교이름·범위가 자동 설정됩니다
@@ -1475,6 +1481,23 @@ function chooseOnline(){
 
 // ═════════════════════════════════════════════
 // 학교 공유 코드 (방법 1)
+// ═════════════════════════════════════════════
+function startVoiceInput(inputId, btnId){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome 또는 Edge를 사용해주세요.'); return; }
+  const btn=document.getElementById(btnId);
+  if(btn.classList.contains('listening')) return;
+  const rec=new SR();
+  rec.lang='ko-KR'; rec.interimResults=false; rec.maxAlternatives=1;
+  btn.classList.add('listening'); btn.textContent='🔴';
+  rec.onresult=e=>{
+    document.getElementById(inputId).value=e.results[0][0].transcript;
+    btn.classList.remove('listening'); btn.textContent='🎤';
+  };
+  rec.onerror=e=>{ btn.classList.remove('listening'); btn.textContent='🎤'; if(e.error!=='aborted') alert('음성 인식 오류: '+e.error); };
+  rec.onend=()=>{ btn.classList.remove('listening'); btn.textContent='🎤'; };
+  rec.start();
+}
 // ═════════════════════════════════════════════
 function switchLoginTab(tab){
   const ids=['student','code'];
