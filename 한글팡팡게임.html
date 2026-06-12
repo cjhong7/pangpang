@@ -2012,8 +2012,13 @@ function confirmName(){
 // ═════════════════════════════════════════════
 function selectStage(n){
   stage=n;
-  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('stage-btn-'+n).classList.add('sel');
+  document.querySelectorAll('.s-btn').forEach(b=>{
+    b.classList.remove('sel');
+    if(b.id==='stage-btn-5') b.style.background='rgba(255,107,107,.2)';
+  });
+  const selBtn=document.getElementById('stage-btn-'+n);
+  if(n===5) selBtn.style.background=''; // 인라인 background 제거 → CSS .sel 규칙 적용
+  selBtn.classList.add('sel');
   const sb=document.getElementById('start-btn');
   sb.style.opacity='1'; sb.style.pointerEvents='auto';
   sb.style.background='linear-gradient(135deg,#43e97b,#38f9d7)';
